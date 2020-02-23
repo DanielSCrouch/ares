@@ -1,0 +1,9 @@
+.idea
+.DS_Store
+.vscode
+.atom
+atomic-red-team/enterprise-attack.json
+
+docs/.sass-cache/
+docs/_site/
+**/Invoke-AtomicTest-ExecutionLog.csv

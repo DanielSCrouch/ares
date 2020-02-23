@@ -1,0 +1,74 @@
+# <%= technique['identifier'] %> - <%= technique['name'] -%>
+
+## [Description from ATT&CK](https://attack.mitre.org/wiki/Technique/<%= technique['identifier'] %>)
+<blockquote><%= technique['description'] %></blockquote>
+
+## Atomic Tests
+<% atomic_yaml['atomic_tests'].each_with_index do |test, test_number| -%>
+<% title = "Atomic Test ##{test_number+1} - #{test['name']}" %>
+- [<%= title %>](#<%= title.downcase.gsub(/ /, '-').gsub(/[`~!@#$%^&*()+=<>?,.\/:;"'|{}\[\]\\–—]/, '') %>)
+<% end %>
+
+<% atomic_yaml['atomic_tests'].each_with_index do |test, test_number| -%>
+<br/>
+
+## Atomic Test #<%= test_number+1 %> - <%= test['name'] %>
+<%= test['description'] -%>
+
+**Supported Platforms:** <%= test['supported_platforms'].collect do |p|
+  case p
+    when 'macos'
+      'macOS'
+    else
+      p.capitalize
+  end
+end.join(', ') %>
+
+<% if test['input_arguments'].to_a.count > 0 %>
+#### Inputs:
+| Name | Description | Type | Default Value | 
+|------|-------------|------|---------------|
+<% test['input_arguments'].each do |arg_name, arg_options| -%>
+| <%= arg_name %> | <%= arg_options['description'] %> | <%= arg_options['type'] %> | <%= arg_options['default'] %>|
+<% end -%>
+<% end -%>
+
+<%- if test['executor']['name'] == 'manual' -%>
+#### Run it with these steps! <%- if test['executor']['elevation_required'] -%> Elevation Required (e.g. root or admin) <%- end -%>
+<%= test['executor']['steps'] %>
+<%- else -%>
+
+#### Attack Commands: Run with `<%= test['executor']['name'] %>`! <%- if test['executor']['elevation_required'] -%> Elevation Required (e.g. root or admin) <%- end -%>
+
+```
+<%= test['executor']['command'].to_s.strip %>
+```
+<%- end -%>
+
+<%- if test['executor']['cleanup_command'] != nil -%>
+#### Cleanup Commands:
+```
+<%= test['executor']['cleanup_command'].to_s.strip %>
+```
+<%- end -%>
+
+<% if test['dependencies'].to_a.count > 0 %>
+#### Dependencies:  Run with `<%- if test['dependency_executor_name'] != nil%><%= test['dependency_executor_name'] %><%- else -%><%= test['executor']['name'] %><%- end -%>`!
+<% test['dependencies'].each do | dep | -%>
+##### Description: <%= dep['description'].strip!  %>
+##### Check Prereq Commands:
+```
+<%= dep['prereq_command'].strip! %> 
+```
+##### Get Prereq Commands:
+```
+<%= dep['get_prereq_command'].strip!  %>
+```
+<% end -%>
+<% end -%>
+
+
+
+
+<br/>
+<%- end -%>
