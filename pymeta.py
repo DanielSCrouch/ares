@@ -9,7 +9,10 @@ from dotenv import load_dotenv
 from threading import Timer, Lock
 from optparse import OptionParser
 
-# import default password
+################################################################################
+# Envionment imports (API Keys etc)
+################################################################################
+
 load_dotenv()
 MSF_SERVER = os.getenv('MSF_SERVER')
 MSF_PORT = os.getenv('MSF_PORT')
@@ -18,6 +21,9 @@ MSF_PASSWORD = os.getenv('MSF_PASSWORD')
 NESSUS_USERNAME = os.getenv('NESSUS_USERNAME')
 NESSUS_PASSWORD = os.getenv('NESSUS_PASSWORD')
 
+################################################################################
+# Metasploit RPC Methods
+################################################################################
 
 class MsfRpcMethod(object):
     AuthLogin = 'auth.login'
@@ -32,8 +38,9 @@ class MsfRpcMethod(object):
     ConsoleSessionKill = 'console.session_kill'
     ConsoleSessionDetach = 'console.session_detach'
 
-##############################################################
-### Error Handling
+################################################################################
+# Error Handling
+################################################################################
 
 class MsfRpcError(Exception):
     pass
@@ -49,8 +56,9 @@ class MsfAuthError(MsfError):
     def __init__(self, msg):
         self.msg = msg
 
-##############################################################
-### MSF Client
+################################################################################
+# MSF Client
+################################################################################
 
 class MsfClient(object):
 
@@ -64,11 +72,8 @@ class MsfClient(object):
         self.headers = {"Content-type": "binary/message-pack"}
         self.consoles = {} # dict of consoles {cid: MsfConsole Object}
 
-        print('sssssssssss: ', self.ssl)
-        print('Logging in user', self.user)
-        time.sleep(0.5)
-        self.login(kwargs.get('username', 'msf'), password)
-
+        print('[+] Logging in user', self.user)
+        self.login(self.user, password)
 
     def msf_callback(self, method, opts=[]):
         if method != 'auth.login':
@@ -119,9 +124,9 @@ class MsfClient(object):
         self.msf_callback(MsfRpcMethod.AuthLogout, [self.token])
         print("User logged out")
 
-
-#####################################################################
-### MSF Console
+################################################################################
+# MSF Console
+################################################################################
 
 class MsfConsole(object):
     def __init__(self, client, cid=None, callback=None):
@@ -226,8 +231,6 @@ class MsfConsole(object):
     #         self.fl = False
 
 
-
-
 ##############################################################
 ### MSF Console (Callable)
 
@@ -327,39 +330,17 @@ class MsfConsole1(object):
         print('returning data')
         return data
 
-##############################################################
-##############################################################
-##############################################################
-##############################################################
-##############################################################
-##############################################################
-##############################################################
-##############################################################
+################################################################################
+# Option Parsing and Encoding
+################################################################################
 
-
-
-
-
-
-
-#
-##############################################################
-##############################################################
-##############################################################
-##############################################################
-##############################################################
-##############################################################
-##############################################################
-# ##############################################################
-# ### Option Parsing and Encoding
-#
 def parseargs():
     p = OptionParser()
     p.add_option("-P", dest="password", help="Specify the password to access msfrpcd", metavar="opt")
-    p.add_option("-S", dest="ssl", help="Disable SSL on the RPC socket", action="store_false", default=True)
-    p.add_option("-U", dest="username", help="Specify the username to access msfrpcd", metavar="opt", default="msf")
-    p.add_option("-a", dest="server", help="Connect to this IP address", metavar="host", default="127.0.0.1")
-    p.add_option("-p", dest="port", help="Connect to the specified port instead of 55552", metavar="opt", default=55553)
+    p.add_option("-S", dest="ssl", help="Disable SSL on the RPC socket", action="store_false", default=False)
+    p.add_option("-U", dest="username", help="Specify the username to access msfrpcd", metavar="opt", default=MSF_USER)
+    p.add_option("-a", dest="server", help="Connect to this IP address", metavar="host", default=MSF_SERVER)
+    p.add_option("-p", dest="port", help="Connect to the specified port instead of 55552", metavar="opt", default=MSF_PORT)
     o, a = p.parse_args()
     if o.password is None:
         print('[-] Error: a password must be specified (-P)\n')
@@ -384,32 +365,36 @@ def encode(data):
 def decode(data):
     return msgpack.unpackb(data)
 
+################################################################################
+# Main
+################################################################################
 
-##############################################################
-### Testing
+if __name__ == '__main__':
+    o = parseargs()
+    print(o)
+    try:
+        client = MsfClient(o.__dict__.pop('password'), **o.__dict__)
+        console = MsfConsole(client)
+        # m.interact('')
+    except MsfRpcError:
+        print(str(client))
+        exit(-1)
+    exit(0)
 
-if __name__ == "__main__":
-    client = MsfClient("K!ng5", username='msf')
-    console = MsfConsole(client)
-    print("Waiting for the console to load...")
-    time.sleep(3)
-    print("loading nessus")
-    print(console.execute(command="load nessus"))
-    time.sleep(3)
-    print("running nessus")
-    print(console.execute(command='nessus_connect kalikings:K!ng5@kali:8834 ok'))
-    time.sleep(8)
-    print("running nessus")
-    print(console.execute(command='show options'))
+################################################################################
+# Testing
+################################################################################
 
-
-
-# if __name__ == '__main__':
-#     o = parseargs()
-#     try:
-#         m = MsfRpc(o.__dict__.pop('password'), **o.__dict__)
-#         m.interact('')
-#     except MsfRpcError, m:
-#         print str(m)
-#         exit(-1)
-#     exit(0)
+# if __name__ == "__main__":
+#     client = MsfClient("kings123", username='msf')
+#     console = MsfConsole(client)
+#     print("Waiting for the console to load...")
+#     time.sleep(3)
+#     print("loading nessus")
+#     print(console.execute(command="load nessus"))
+#     time.sleep(3)
+#     print("running nessus")
+#     print(console.execute(command='nessus_connect kalikings:K!ng5@kali:8834 ok'))
+#     time.sleep(8)
+#     print("running nessus")
+#     print(console.execute(command='show options'))
