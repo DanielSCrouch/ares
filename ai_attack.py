@@ -2,6 +2,8 @@
 
 from kali_setup import Nessus, MsfRpc
 from pymeta import *
+from threading import Thread
+import time
 
 ################################################################################
 # Stat Kali Services
@@ -15,6 +17,7 @@ except Exception:
 
 try:
     MsfRpc().start_service()
+    time.sleep(1) # wait for MsfRpc service to load
     print("[*] Metasploit RPC started")
 except Exception:
     print("[-] Error starting Metasploit RPC")
@@ -22,3 +25,8 @@ except Exception:
 ################################################################################
 # Create and login to Metasploit Console
 ################################################################################
+
+
+
+msf_client = MsfClient()
+msf_console = MsfConsole(msf_client)

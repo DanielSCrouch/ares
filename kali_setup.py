@@ -98,11 +98,15 @@ class MsfRpc(object):
         cmd += " Pass=" + MSF_PASSWORD
         cmd += " User=" + MSF_USER
         cmd += " \n"
-        # self.process.stdin.write(cmd)
+        print("[+] Login Details:", cmd)
+        self.process.stdin.write(cmd)
+        self.process.stdin.flush()
+        # self.process.stdin.close()
         # out, err = self.process.communicate()
         # print(out)
         Thread(target=self.poll_server).start()
         # return True if service has started
+        # self.process.wait(timeout=0.2)
         return True
 
     def stop_service(self):
@@ -113,7 +117,10 @@ class MsfRpc(object):
         self.polling = False
         # exit msfconsole
         self.process.stdin.write("exit \n")
+        self.process.stdin.flush()
         self.process.stdin.close()
+        self.process.terminate()
+        self.process.wait(timeout=0.2)
         # return True if service has stopped
         return True
 
@@ -127,4 +134,4 @@ class MsfRpc(object):
             if returncode is not None:
                 self.polling = False
                 raise Exception(returncode)
-            time.sleep(1)
+            time.sleep(0.1)

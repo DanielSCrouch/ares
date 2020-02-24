@@ -65,7 +65,7 @@ class MsfAuthError(MsfError):
 class MsfClient(object):
     """Client for MsfRpc login, can spawn multiple consoles"""
 
-    def __init__(self, password, **kwargs):
+    def __init__(self, password=MSF_PASSWORD, **kwargs):
         self.host = kwargs.get('server', MSF_SERVER)
         self.port = kwargs.get('port', MSF_PORT)
         self.ssl = kwargs.get('ssl', False)
@@ -93,9 +93,7 @@ class MsfClient(object):
 
         opts.insert(0, method)
         payload = encode(opts)
-
         r = requests.post(url, data=payload, headers=self.headers, verify=False)
-
         opts[:] = []  # Clear opts list
 
         return convert(decode(r.content))  # convert all keys/vals to utf8
@@ -336,12 +334,15 @@ def decode(data):
 ################################################################################
 
 if __name__ == '__main__':
-    o = parseargs()
-    try:
-        client = MsfClient(o.__dict__.pop('password'), **o.__dict__)
-        console = MsfConsole(client)
-        # m.interact('')
-    except MsfRpcError:
-        print(str(client))
-        exit(-1)
-    exit(0)
+    msf_client = MsfClient()
+    msf_console = MsfConsole(msf_client)
+
+    # o = parseargs()
+    # try:
+    #     client = MsfClient(o.__dict__.pop('password'), **o.__dict__)
+    #     console = MsfConsole(client)
+    #     # m.interact('')
+    # except MsfRpcError:
+    #     print(str(client))
+    #     exit(-1)
+    # exit(0)
