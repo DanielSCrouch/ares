@@ -11,6 +11,10 @@ from optparse import OptionParser
 
 # import default password
 load_dotenv()
+MSF_SERVER = os.getenv('MSF_SERVER')
+MSF_PORT = os.getenv('MSF_PORT')
+MSF_USER = os.getenv('MSF_USER')
+MSF_PASSWORD = os.getenv('MSF_PASSWORD')
 NESSUS_USERNAME = os.getenv('NESSUS_USERNAME')
 NESSUS_PASSWORD = os.getenv('NESSUS_PASSWORD')
 
@@ -51,16 +55,18 @@ class MsfAuthError(MsfError):
 class MsfClient(object):
 
     def __init__(self, password, **kwargs):
-        self.uri = kwargs.get('uri', '/api/')
-        self.host = kwargs.get('server', '10.91.251.100')
-        self.port = kwargs.get('port', 55553)
+        self.host = kwargs.get('server', MSF_SERVER)
+        self.port = kwargs.get('port', MSF_PORT)
         self.ssl = kwargs.get('ssl', False)
-        self.user = kwargs.get('username')
+        self.user = kwargs.get('username', MSF_USER)
+        #
+        self.uri = kwargs.get('uri', '/api/')
         self.headers = {"Content-type": "binary/message-pack"}
         self.consoles = {} # dict of consoles {cid: MsfConsole Object}
 
+        print('sssssssssss: ', self.ssl)
         print('Logging in user', self.user)
-        time.sleep(2)
+        time.sleep(0.5)
         self.login(kwargs.get('username', 'msf'), password)
 
 
