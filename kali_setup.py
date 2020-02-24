@@ -1,7 +1,24 @@
 import subprocess
 import time
+import os
 from threading import Thread
+from dotenv import load_dotenv
 
+# Has to be run from sudo
+
+################################################################################
+# Envionment imports (Set msf server login details)
+################################################################################
+
+load_dotenv()
+MSF_SERVER = os.getenv('MSF_SERVER')
+MSF_PORT = os.getenv('MSF_PORT')
+MSF_USER = os.getenv('MSF_USER')
+MSF_PASSWORD = os.getenv('MSF_PASSWORD')
+
+################################################################################
+# Nessus setup
+################################################################################
 
 class Nessus(object):
     """
@@ -48,6 +65,9 @@ class Nessus(object):
             return False
         return True
 
+################################################################################
+# Nessus setup
+################################################################################
 
 class MsfRpc(object):
     """
@@ -63,7 +83,6 @@ class MsfRpc(object):
         Starts an os subprocess to run metasploit console, then
         starts MsfRPC service.
         """
-        print("starting service")
         command = ["msfconsole"]
         self.process = subprocess.Popen(command,              \
                                    stdin = subprocess.PIPE,   \
@@ -73,12 +92,16 @@ class MsfRpc(object):
                                    shell=True,                \
                                    bufsize=2048)
         time.sleep(10)
-        cmd = "load msgrpc ServerHost=10.91.251.100 ServerPort=55553 Pass=kings123 User=msf \n"
-        self.process.stdin.write(cmd)
-        # Thread(target=self.poll_server).start()
-        outs, errs = self.process.communicate()
-        print(outs)
-        print(errs)
+        cmd = "load msgrpc"
+        cmd += " ServerHost=" + MSF_SERVER
+        cmd += " ServerPort=" + MSF_PORT
+        cmd += " Pass=" + MSF_PASSWORD
+        cmd += " User=" + MSF_USER
+        cmd += " \n"
+        # self.process.stdin.write(cmd)
+        # out, err = self.process.communicate()
+        # print(out)
+        Thread(target=self.poll_server).start()
         # return True if service has started
         return True
 
@@ -103,14 +126,5 @@ class MsfRpc(object):
             returncode = self.process.poll()
             if returncode is not None:
                 self.polling = False
-                raise Error(returncode)
+                raise Exception(returncode)
             time.sleep(1)
-
-
-# nessus = Nessus()
-# print(nessus.start_service())
-# print(nessus.stop_service())
-# print(nessus.start_service())
-
-msf = MsfRpc()
-msf.start_service()
