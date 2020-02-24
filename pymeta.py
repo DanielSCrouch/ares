@@ -187,13 +187,23 @@ class MsfConsole(object):
         """
         Execute a command on the console.
         """
-        if not command.endswith('\n'):
-            command += '\n'
-        # check if console avaliable
-        if self.is_busy():
-            raise MsfError('Console {} is busy'.format(self.cid))
-            self.msf_wait()
-        self.msf_read_write(command)
+        # run external commands
+        if command.startswith('#'):
+            if "login nessus" in command:
+                command = "nessus_connect " + NESSUS_USERNAME + \
+                                              ':' + \
+                                              NESSUS_PASSWORD + \
+                                              "@kali:8834 ok"
+                self.execute(command)
+        # run msf commands
+        else:
+            if not command.endswith('\n'):
+                command += '\n'
+            # check if console avaliable
+            if self.is_busy():
+                raise MsfError('Console {} is busy'.format(self.cid))
+                self.msf_wait()
+            self.msf_read_write(command)
 
     def msf_read_write(self, command=None):
         """
