@@ -5,8 +5,10 @@ import requests
 import uuid
 import msgpack
 import time
+import sys
+import select
 from dotenv import load_dotenv
-from threading import Timer, Lock
+from threading import Timer, Lock, Thread
 from optparse import OptionParser
 
 ################################################################################
@@ -61,6 +63,7 @@ class MsfAuthError(MsfError):
 ################################################################################
 
 class MsfClient(object):
+    """Client for MsfRpc login, can spawn multiple consoles"""
 
     def __init__(self, password, **kwargs):
         self.host = kwargs.get('server', MSF_SERVER)
@@ -72,7 +75,7 @@ class MsfClient(object):
         self.headers = {"Content-type": "binary/message-pack"}
         self.consoles = {} # dict of consoles {cid: MsfConsole Object}
 
-        print('[+] Logging in user', self.user)
+        print('[*] Logging in user', self.user)
         self.login(self.user, password)
 
     def msf_callback(self, method, opts=[]):
@@ -104,7 +107,7 @@ class MsfClient(object):
                 self.token = auth['token']
                 token = self.add_perm_token()
                 self.token = token
-                print("Login successful")
+                print("[*] Login successful with token ", token)
                 return True
         except Exception:
             raise MsfAuthError("MsfRPC: Authentication failed")
@@ -137,147 +140,107 @@ class MsfConsole(object):
         - client : an msfrpc client object.
 
         Optional Arguments:
-        - consoleid : the console identifier if it exists already otherwise a new one will be created.
-        - callback : a callback function that gets called when data is received from the console.
+        - consoleid : the console identifier if it exists already otherwise a
+        new one will be created.
         """
         self.client = client
         self.cid = cid
-        self.callback = callback
-
-        self.prompt = '' # console user prompt
-        self.lock = Lock()
+        self.msf_prompt = '' # console user prompt
+        self.msf_data = {}
+        self.msf_lock = Lock()
+        self.console_lock = Lock()
         self.running = False
-
         # create a new msf console
         r = self.client.msf_callback(MsfRpcMethod.ConsoleCreate)
         if 'id' in r:
             self.cid = r['id']
+            print("[*] Console created")
         else:
             raise MsfRpcError("[-] Unable to create a new console")
-        # self.prompt = '>>> '
-        # self.callback(dict(data='', prompt=self.prompt))
+        self.msf_read_write() # discard metasploit startup output
+        # start polling for I/O and msf console commands and responses
+        Thread(self.start()).start()
 
-        # run i/o poller, lock console while in use
-        self.poller()
-
-    def read(self):
-        """
-        Read data from the console.
-        """
-        return self.client.msf_callback(MsfRpcMethod.ConsoleRead, [self.cid])
-
-    def write(self, command):
-        """
-        Write data to the console.
-        """
-        if not command.endswith('\n'):
-            command += '\n'
-        self.client.msf_callback(MsfRpcMethod.ConsoleWrite, [self.cid, command])
-
-    def poller(self):
-        """Repetivie I/O console poller"""
+    def start(self):
+        """I/O and Msf console poller"""
         self.running = True
-        # read console output
-        self.lock.acquire()
-        data = self.read()
-        self.lock.release()
-
-        if data['data'] or self.prompt != data['prompt']:
-            self.prompt = data['prompt']
-            if self.callback is not None:
-                pass
-                # self.callback(d)
+        while self.running:
+            # read user-console input
+            input = select.select([sys.stdin], [], [], 1)[0]
+            if input:
+                command = sys.stdin.readline().strip()
+                self.display('echo: ' + command)
+                self.execute(command)
+            # read msf-console output
             else:
-                print(data['data'])
-        else:
-            if data:
-                if self.callback is not None:
-                    pass
-                    # self.callback(dict(data=d, prompt=self.prompt))
-                else:
-                    print(data)
-        Timer(0.5, self.poller).start()
+                self.msf_data = self.msf_read_write()
+                if self.msf_data['data'] != '':
+                    self.display(self.msf_data)
+                    self.display(self.msf_prompt)
+                if 'prompt' in self.msf_data.keys() and \
+                    self.msf_data['prompt'] != self.msf_prompt:
+                        self.msf_prompt = self.msf_data['prompt']
+                        self.display(self.msf_prompt)
+            time.sleep(0.1)
 
     def execute(self, command):
         """
         Execute a command on the console.
-
-        Mandatory Arguments:
-        - command : the command to execute
         """
         if not command.endswith('\n'):
             command += '\n'
-        self.lock.acquire()
-        self.write(command)
-        self.lock.release()
+        # check if console avaliable
+        if self.is_busy():
+            raise MsfError('Console {} is busy'.format(self.cid))
+            self.msf_wait()
+        self.msf_read_write(command)
 
-    def delete(self):
-        self.lock.acquire()
-        if self.type_ == MsfRpcConsoleType.Console:
-            self.console.destroy()
-        self.running = False
-        self.lock.release()
-
-    # def raw_input(self, prompt):
-    #     line = InteractiveConsole.raw_input(self, prompt=self.client.prompt)
-    #     return "rpc.execute('%s')" % line.replace("'", r"\'")
-    #
-    # def callback(self, d):
-    #     stdout.write('\n%s' % d['data'])
-    #     if not self.fl:
-    #         stdout.write('\n%s' % d['prompt'])
-    #         stdout.flush()
-    #     else:
-    #         self.fl = False
-
-
-##############################################################
-### MSF Console (Callable)
-
-class MsfConsole1(object):
-
-    def __init__(self, rpc, cid=None):
+    def msf_read_write(self, command=None):
         """
-        Initializes an msf console object.
-        Mandatory Arguments:
-        - rpc : the msfrpc client object.
+        Read or write data to the console. Combined to clear buffer and lock.
+        """
+        self.msf_lock.acquire()
+        d = self.client.msf_callback(MsfRpcMethod.ConsoleRead, [self.cid])
+        if command:
+            if not command.endswith('\n'):
+                command += '\n'
+            self.client.msf_callback(MsfRpcMethod.ConsoleWrite, \
+                                     [self.cid, command])
+        self.msf_lock.release()
+        return d
 
-        - cid : the console identifier if it exists already otherwise a new one will be created.
+    def msf_wait(self):
         """
+        Wait for console to become avaliable
+        """
+        while self.is_busy():
+            time.sleep(1)
 
-        self.rpc = rpc
-        if cid is None:
-            r = self.rpc.msf_callback(MsfRpcMethod.ConsoleCreate)
-            if 'id' in r:
-                self.cid = r['id']
-            else:
-                raise MsfRpcError("Unable to create a new console")
-
-    def read(self):
+    def display(self, output):
         """
-        Read data from the console.
+        Write string to display console
         """
-        return self.rpc.msf_callback(MsfRpcMethod.ConsoleRead, [self.cid])
-
-    def write(self, command):
-        """
-        Write data to the console.
-        """
-        if not command.endswith('\n'):
-            command += '\n'
-        self.rpc.msf_callback(MsfRpcMethod.ConsoleWrite, [self.cid, command])
+        if type(output) is str:
+            output = output.replace('\x01', '').replace('\x02', '')
+        elif type(output) is dict:
+            # parse msfrpc data types
+            if 'data' in output.keys() and output['data']:
+                output = output['data']
+            elif 'results' in output.keys() and output['result']:
+                output = "Results: ' + output['result']"
+        print(output)
 
     def sessionkill(self):
         """
         Kill all active meterpreter or shell sessions.
         """
-        self.rpc.msf_callback(MsfRpcMethod.ConsoleSessionKill, [self.cid])
+        self.client.msf_callback(MsfRpcMethod.ConsoleSessionKill, [self.cid])
 
     def sessiondetach(self):
         """
         Detach the current meterpreter or shell session.
         """
-        self.rpc.msf_callback(MsfRpcMethod.ConsoleSessionDetach, [self.cid])
+        self.client.msf_callback(MsfRpcMethod.ConsoleSessionDetach, [self.cid])
 
     def tabs(self, line):
         """
@@ -285,50 +248,29 @@ class MsfConsole1(object):
         Mandatory Arguments:
         - line : a partial command to be completed.
         """
-        return self.rpc.msf_callback(MsfRpcMethod.ConsoleTabs, [self.cid, line])['tabs']
+        return self.client.msf_callback(MsfRpcMethod.ConsoleTabs, \
+                                        [self.cid, line])['tabs']
+
+    def stop(self):
+        """Stop console from polling I/O and msf response"""
+        self.running = False
 
     def destroy(self):
         """
         Destroy the console.
         """
-        self.rpc.msf_callback(MsfRpcMethod.ConsoleDestroy, [self.cid])
+        self.client.msf_callback(MsfRpcMethod.ConsoleDestroy, [self.cid])
 
     def is_busy(self):
         """
-        Checks if the console is busy. We can't use .read() because that clears the data buffer.
+        Checks if the console is busy. We can't use .read() because that clears
+        the data buffer.
         We must do this by using .list instead.
         """
-        cons = self.rpc.msf_callback(MsfRpcMethod.ConsoleList)['consoles']
+        cons = self.client.msf_callback(MsfRpcMethod.ConsoleList)['consoles']
         for c in cons:
             if c['id'] == self.cid:
                 return c['busy']
-
-    def execute(self, command=None):
-        """
-        Execute a console command and wait for the returned data
-        Optional Keyword Arguments:
-        - command : the command to be passed to the msfconsole
-        """
-        print('starting execution')
-        # check if console avaliable
-        if self.rpc.console.is_busy():
-            print("console is busy")
-            raise MsfError('Console {} is busy'.format(self.cid))
-        # self.read() # clear data buffer
-        # run command to console without directly opening a command line
-        command_str = command + '\n'
-        print(command_str)
-        if 'run' in command_str and 'run -z' not in command_str:
-            command_str.replace('run', 'run -z')
-        print("writing")
-        self.write(command_str)
-        print("that's finished")
-        data = ''
-        while data == '' or self.rpc.console.is_busy():
-            time.sleep(1)
-            data += self.read()['data']
-        print('returning data')
-        return data
 
 ################################################################################
 # Option Parsing and Encoding
@@ -336,11 +278,25 @@ class MsfConsole1(object):
 
 def parseargs():
     p = OptionParser()
-    p.add_option("-P", dest="password", help="Specify the password to access msfrpcd", metavar="opt")
-    p.add_option("-S", dest="ssl", help="Disable SSL on the RPC socket", action="store_false", default=False)
-    p.add_option("-U", dest="username", help="Specify the username to access msfrpcd", metavar="opt", default=MSF_USER)
-    p.add_option("-a", dest="server", help="Connect to this IP address", metavar="host", default=MSF_SERVER)
-    p.add_option("-p", dest="port", help="Connect to the specified port instead of 55552", metavar="opt", default=MSF_PORT)
+    p.add_option("-P", dest="password", \
+                       help="Specify the password to access msfrpcd", \
+                       metavar="opt")
+    p.add_option("-S", dest="ssl", \
+                       help="Disable SSL on the RPC socket", \
+                       action="store_false", \
+                       default=False)
+    p.add_option("-U", dest="username", \
+                       help="Specify the username to access msfrpcd", \
+                       metavar="opt", \
+                       default=MSF_USER)
+    p.add_option("-a", dest="server", \
+                       help="Connect to this IP address", \
+                       metavar="host", \
+                       default=MSF_SERVER)
+    p.add_option("-p", dest="port", \
+                       help="Connect to the specified port instead of 55552", \
+                       metavar="opt", \
+                       default=MSF_PORT)
     o, a = p.parse_args()
     if o.password is None:
         print('[-] Error: a password must be specified (-P)\n')
@@ -371,7 +327,6 @@ def decode(data):
 
 if __name__ == '__main__':
     o = parseargs()
-    print(o)
     try:
         client = MsfClient(o.__dict__.pop('password'), **o.__dict__)
         console = MsfConsole(client)
@@ -380,21 +335,3 @@ if __name__ == '__main__':
         print(str(client))
         exit(-1)
     exit(0)
-
-################################################################################
-# Testing
-################################################################################
-
-# if __name__ == "__main__":
-#     client = MsfClient("kings123", username='msf')
-#     console = MsfConsole(client)
-#     print("Waiting for the console to load...")
-#     time.sleep(3)
-#     print("loading nessus")
-#     print(console.execute(command="load nessus"))
-#     time.sleep(3)
-#     print("running nessus")
-#     print(console.execute(command='nessus_connect kalikings:K!ng5@kali:8834 ok'))
-#     time.sleep(8)
-#     print("running nessus")
-#     print(console.execute(command='show options'))
