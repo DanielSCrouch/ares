@@ -63,6 +63,7 @@ class MsfRpc(object):
         Starts an os subprocess to run metasploit console, then
         starts MsfRPC service.
         """
+        print("starting service")
         command = ["msfconsole"]
         self.process = subprocess.Popen(command,              \
                                    stdin = subprocess.PIPE,   \
@@ -70,35 +71,26 @@ class MsfRpc(object):
                                    stderr = subprocess.PIPE,  \
                                    universal_newlines = True, \
                                    shell=True,                \
-                                   bufsize=0)
-        # check for exception errors
-        for line in self.process.stderr:
-            raise Exception(line.strip())
-        print('here')
-        # start msgrpc service
-        cmd = "load msgrpc ServerHost=10.91.251.100 ServerPort=55553 Pass=kings123 User=msf"
-        self.process.stdin.write()
-        # check for exception errors
-        for line in self.process.stderr:
-            raise Exception(line.strip())
-        # raise exception error if service stops
-        Thread(self.poll_server).start()
+                                   bufsize=2048)
+        time.sleep(10)
+        cmd = "load msgrpc ServerHost=10.91.251.100 ServerPort=55553 Pass=kings123 User=msf \n"
+        self.process.stdin.write(cmd)
+        # Thread(target=self.poll_server).start()
+        outs, errs = self.process.communicate()
+        print(outs)
+        print(errs)
         # return True if service has started
         return True
 
     def stop_service(self):
         """
-        Stops Nessus server.
+        Stops metaploit console.
         """
         # stop polling service
         self.polling = False
         # exit msfconsole
         self.process.stdin.write("exit \n")
         self.process.stdin.close()
-        # check for exception errors
-        for line in process.stderr:
-            raise Exception(line.strip())
-            return False
         # return True if service has stopped
         return True
 
@@ -108,15 +100,11 @@ class MsfRpc(object):
         """
         self.polling = True
         while(self.polling):
-            print("polling")
             returncode = self.process.poll()
             if returncode is not None:
                 self.polling = False
                 raise Error(returncode)
             time.sleep(1)
-
-            for line in self.process.stdout:
-                print(line.strip())
 
 
 # nessus = Nessus()
