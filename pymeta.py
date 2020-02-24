@@ -7,6 +7,8 @@ import msgpack
 import time
 import sys
 import select
+import queue
+
 from dotenv import load_dotenv
 from threading import Timer, Lock, Thread
 from optparse import OptionParser
@@ -20,8 +22,6 @@ MSF_SERVER = os.getenv('MSF_SERVER')
 MSF_PORT = os.getenv('MSF_PORT')
 MSF_USER = os.getenv('MSF_USER')
 MSF_PASSWORD = os.getenv('MSF_PASSWORD')
-NESSUS_USERNAME = os.getenv('NESSUS_USERNAME')
-NESSUS_PASSWORD = os.getenv('NESSUS_PASSWORD')
 
 ################################################################################
 # Metasploit RPC Methods
@@ -130,7 +130,7 @@ class MsfClient(object):
 ################################################################################
 
 class MsfConsole(object):
-    def __init__(self, client, cid=None, callback=None):
+    def __init__(self, client, cid=None, cmd_queue=None):
         """
         Initialises an msf console object via RPC.
 
@@ -143,6 +143,7 @@ class MsfConsole(object):
         """
         self.client = client
         self.cid = cid
+        self.cmd_queue = cmd_queue # queue of direct commands (not from console)
         self.msf_prompt = '' # console user prompt
         self.msf_data = {}
         self.msf_lock = Lock()
@@ -156,30 +157,39 @@ class MsfConsole(object):
         else:
             raise MsfRpcError("[-] Unable to create a new console")
         self.msf_read_write() # discard metasploit startup output
-        # start polling for I/O and msf console commands and responses
-        Thread(self.start_polling()).start()
 
     def start_polling(self):
         """I/O and Msf console poller"""
         self.running = True
         while self.running:
+            time.sleep(0.1)
+            # read msf console output
+            self.msf_data = self.msf_read_write()
+            if self.msf_data['data'] != '':
+                self.display(self.msf_data)
+                self.display(self.msf_prompt)
+
             # read user-console input
-            input = select.select([sys.stdin], [], [], 1)[0]
-            if input:
+            console_input = select.select([sys.stdin], [], [], 1)[0]
+            if console_input:
                 command = sys.stdin.readline().strip()
                 self.display('echo: ' + command)
                 self.execute(command)
-            # read msf-console output
-            else:
-                self.msf_data = self.msf_read_write()
-                if self.msf_data['data'] != '':
-                    self.display(self.msf_data)
+
+            # read user-direct input (from queue)
+            try:
+                command = self.cmd_queue.get(block=False)
+                self.display('decho: ' + command)
+                self.execute(command)
+            except Exception as e:
+                if str(e) != "":
+                    print('Exception: ', e)
+
+            # update msf prompt
+            if 'prompt' in self.msf_data.keys() and \
+                self.msf_data['prompt'] != self.msf_prompt:
+                    self.msf_prompt = self.msf_data['prompt']
                     self.display(self.msf_prompt)
-                if 'prompt' in self.msf_data.keys() and \
-                    self.msf_data['prompt'] != self.msf_prompt:
-                        self.msf_prompt = self.msf_data['prompt']
-                        self.display(self.msf_prompt)
-            time.sleep(0.1)
 
     def execute(self, command):
         """
@@ -188,11 +198,7 @@ class MsfConsole(object):
         # run external commands
         if command.startswith('#'):
             if "login nessus" in command:
-                command = "nessus_connect " + NESSUS_USERNAME + \
-                                              ':' + \
-                                              NESSUS_PASSWORD + \
-                                              "@kali:8834 ok"
-                self.execute(command)
+                pass
         # run msf commands
         else:
             if not command.endswith('\n'):
@@ -336,6 +342,7 @@ def decode(data):
 if __name__ == '__main__':
     msf_client = MsfClient()
     msf_console = MsfConsole(msf_client)
+    msf_console.start_polling()
 
     # o = parseargs()
     # try:
