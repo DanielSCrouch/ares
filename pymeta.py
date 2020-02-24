@@ -159,9 +159,9 @@ class MsfConsole(object):
             raise MsfRpcError("[-] Unable to create a new console")
         self.msf_read_write() # discard metasploit startup output
         # start polling for I/O and msf console commands and responses
-        Thread(self.start()).start()
+        Thread(self.start_polling()).start()
 
-    def start(self):
+    def start_polling(self):
         """I/O and Msf console poller"""
         self.running = True
         while self.running:
@@ -261,7 +261,7 @@ class MsfConsole(object):
         return self.client.msf_callback(MsfRpcMethod.ConsoleTabs, \
                                         [self.cid, line])['tabs']
 
-    def stop(self):
+    def stop_polling(self):
         """Stop console from polling I/O and msf response"""
         self.running = False
 
