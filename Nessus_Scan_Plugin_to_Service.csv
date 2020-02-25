@@ -1,0 +1,58 @@
+﻿Plugin ID,Name,Service Name
+11424,WebDAV Detection,WebDAV
+50845,OpenSSL Detection,OpenSSL
+22964,Service Detection,Service
+10092,FTP Server Detection,FTP Server
+48243,PHP Version Detection,PHP
+10263,SMTP Server Detection,SMTP Server
+11819,TFTP Daemon Detection,TFTP Daemon
+20836,Adobe Reader Detection,Adobe Reader
+28211,Flash Player Detection,Flash Player
+10719,MySQL Server Detection,MySQL Server
+105793,VMware Tools Detection,VMware Tools
+10342,VNC Software Detection,VNC Software
+22319,MSRPC Service Detection,MSRPC Service
+57323,OpenSSL Version Detection,OpenSSL
+10758,VNC HTTP Server Detection,VNC HTTP Server
+19689,Embedded Web Server Detection,Embedded Web Server
+11217,Microsoft SQL Server Detection (credentialed check),SQL
+35296,SNMP Protocol Version Detection,SNMP
+34460,Unsupported Web Server Detection,Web Server
+58987,PHP Unsupported Version Detection,PHP
+51351,Microsoft .NET Framework Detection,Microsoft .NET Framework
+40448,SNMP Supported Protocols Detection,SNMP
+104743,TLS Version 1.0 Protocol Detection,TLS
+19288,VNC Server Security Type Detection,VNC Server Security Type
+11429,Microsoft Windows Messenger Detection,Microsoft Windows Messenger
+20007,SSL Version 2 and 3 Protocol Detection,SSL
+11011,Microsoft Windows SMB Service Detection,Microsoft Windows SMB Service
+56213,Adobe Reader Unsupported Version Detection,Adobe Reader
+10884,Network Time Protocol (NTP) Server Detection,Network Time Protocol (NTP) Server
+72367,Microsoft Internet Explorer Version Detection,Microsoft Internet Explorer
+10144,Microsoft SQL Server TCP/IP Listener Detection,Microsoft SQL Server
+59196,Adobe Flash Player Unsupported Version Detection,Adobe Flash Player
+64784,Microsoft SQL Server Unsupported Version Detection,SQL
+22024,Microsoft Internet Explorer Unsupported Version Detection,Microsoft Internet Explorer
+66517,Adobe Reader Enabled in Browser (Internet Explorer),Adobe Reader
+48204,Apache HTTP Server Version,Apache
+10678,Apache mod_info /server-info Information Disclosure,Apache
+10677,Apache mod_status /server-status Information Disclosure,Apache
+84502,HSTS Missing From HTTPS Server,HTTPS Server
+10107,HTTP Server Type and Version,HTTP Service
+24260,HyperText Transfer Protocol (HTTP) Information,HTTP Service
+66542,JavaScript Enabled in Adobe Reader,JavaScript Enabled in Adobe Reader
+69482,Microsoft SQL Server STARTTLS Support,Microsoft SQL Server
+63478,Microsoft Windows LM / NTLMv1 Authentication Enabled,Microsoft Windows LM / NTLMv1
+34252,Microsoft Windows Remote Listeners Enumeration (WMI),Microsoft Windows Remote Listeners Enumeration (WMI)
+62758,Microsoft XML Parser (MSXML) and XML Core Services Unsupported,Microsoft XML Parser (MSXML) and XML
+78555,OpenSSL Unsupported,OpenSSL
+96982,Server Message Block (SMB) Protocol Version 1 Enabled (uncredentialed check),Server Message Block (SMB) Protocol Version1
+34022,SNMP Query Routing Information Disclosure,SNMP
+10550,SNMP Query Running Process List Disclosure,SNMP
+10800,SNMP Query System Information Disclosure,SNMP
+10551,SNMP Request Network Interfaces Enumeration,SNMP
+70657,SSH Algorithms and Languages Supported,SSH
+10267,SSH Server Type and Version Information,SSH
+71049,SSH Weak MAC Algorithms Enabled,SSH
+56984,SSL / TLS Versions Supported,SSL / TLS Services
+10150,Windows NetBIOS / SMB Remote Host Information Disclosure,Windows NetBIOS / SMB Remote Host
