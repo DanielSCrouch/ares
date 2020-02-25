@@ -66,7 +66,7 @@ cmd = "nessus_scan_new " +       \
        SCAN_NAME         + ' ' + \
        SCAN_DESCRIPTION  + ' ' + \
        TARGETS
-msfcmd_queue.put(cmd)
+# msfcmd_queue.put(cmd)
 time.sleep(0.5)
 
 
