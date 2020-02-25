@@ -60,7 +60,7 @@ cmd = "nessus_connect " +       \
        NESSUS_HOST      + ':' + \
        NESSUS_PORT      + ' ok'
 msfcmd_queue.put(cmd)
-time.sleep(0.5)
+time.sleep(2)
 cmd = "nessus_scan_new " +       \
        SCAN_UUID         + ' ' + \
        SCAN_NAME         + ' ' + \
