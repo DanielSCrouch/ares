@@ -75,7 +75,8 @@ class MsfClient(object):
         self.headers = {"Content-type": "binary/message-pack"}
         self.consoles = {} # dict of consoles {cid: MsfConsole Object}
 
-        print('[*] Logging in user', self.user)
+        print('     [*] Logging in user', self.user)
+        time.sleep(2)
         self.login(self.user, password)
 
     def msf_callback(self, method, opts=[]):
@@ -105,7 +106,8 @@ class MsfClient(object):
                 self.token = auth['token']
                 token = self.add_perm_token()
                 self.token = token
-                print("[*] Login successful with token ", token)
+                print("     [*] Login successful with token:", token)
+                time.sleep(2)
                 return True
         except Exception:
             raise MsfAuthError("MsfRPC: Authentication failed")
@@ -153,7 +155,7 @@ class MsfConsole(object):
         r = self.client.msf_callback(MsfRpcMethod.ConsoleCreate)
         if 'id' in r:
             self.cid = r['id']
-            print("[*] Console created")
+            print("     [*] Console created with token: ", self.cid, '\n')
         else:
             raise MsfRpcError("[-] Unable to create a new console")
         self.msf_read_write() # discard metasploit startup output
@@ -173,22 +175,24 @@ class MsfConsole(object):
             console_input = select.select([sys.stdin], [], [], 1)[0]
             if console_input:
                 command = sys.stdin.readline().strip()
-                self.display('echo: ' + command)
+                # self.display('[@]: ' + command)
                 self.execute(command)
 
             # read user-direct input (from queue)
             try:
                 command = self.cmd_queue.get(block=False)
-                self.display('decho: ' + command)
+                self.display('[@] ' + command + '\n')
+                time.sleep(3)
                 self.execute(command)
+                time.sleep(3)
             except Exception as e:
                 if str(e) != "":
                     print('Exception: ', e)
 
             # update msf prompt
             if 'prompt' in self.msf_data.keys() and \
-                self.msf_data['prompt'] != self.msf_prompt:
-                    self.msf_prompt = self.msf_data['prompt']
+                self.msf_data['prompt'] + '\n' != self.msf_prompt:
+                    self.msf_prompt = self.msf_data['prompt'] + '\n'
                     self.display(self.msf_prompt)
 
     def execute(self, command):

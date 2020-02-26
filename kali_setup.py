@@ -98,7 +98,7 @@ class MsfRpc(object):
         cmd += " Pass=" + MSF_PASSWORD
         cmd += " User=" + MSF_USER
         cmd += " \n"
-        print("[+] Login Details:", cmd)
+        # print("[+] Logining into Msf Rpc as ", MSF_USER)
         self.process.stdin.write(cmd)
         self.process.stdin.flush()
         # self.process.stdin.close()
