@@ -22,9 +22,9 @@ CSV_PATH = glob.glob(SCAN_REPORT_DIR + SCAN_NAME + '.csv')[0]
 # Nessus Scan Database Object
 ################################################################################
 
-class ScanDB(object):
+class Database(object):
     """
-    Nessus scan report database object
+    A Database of knwon Targets and their attributes.
     """
     def __init__(self):
         self.targets = {}

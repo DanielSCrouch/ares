@@ -55,6 +55,7 @@ except Exception:
 ################################################################################
 
 msf_client = MsfClient()
+msf_client.login()
 msfcmd_queue = queue.SimpleQueue() # control read/write of commands to msf console
 msf_console = MsfConsole(msf_client, cmd_queue=msfcmd_queue)
 Thread(target=msf_console.start_polling).start()
@@ -97,7 +98,7 @@ for host in hosts:
     print("     [*] " + str(host) + "\n")
 time.sleep(7)
 print("[@] scan_db.targets[" + str(hosts[0]) + "]\n")
-time.sleep(3)
+time.sleep(5)
 print(scan_db.targets[hosts[0]])
 time.sleep(5)
 

@@ -22,8 +22,7 @@ MSF_PASSWORD = os.getenv('MSF_PASSWORD')
 
 class Nessus(object):
     """
-    Nessus class with start and stop service functions.
-    Service runs outside of subprocess, i.e subprocess completes on start.
+    Launches a Nessus application as a subprocess.
     """
     def start_service(self):
         """
@@ -69,19 +68,18 @@ class Nessus(object):
 # Nessus setup
 ################################################################################
 
-class MsfRpc(object):
+class Metaploit(object):
     """
-    MsfRpc class with start and stop service functions.
-    Service runs while subprocess is active.
+    Launches a Metasploit application as a subprocess.
     """
     def __init__(self):
         self.process = None
-        self.polling = False
+        self.polling = False # check if subprocess has died
 
     def start_service(self):
         """
-        Starts an os subprocess to run metasploit console, then
-        starts MsfRPC service.
+        Starts an os subprocess to run metasploit console,
+        then starts MsfRPC service.
         """
         command = ["msfconsole"]
         self.process = subprocess.Popen(command,              \
@@ -90,8 +88,8 @@ class MsfRpc(object):
                                    stderr = subprocess.PIPE,  \
                                    universal_newlines = True, \
                                    shell=True,                \
-                                   bufsize=2048)
-        time.sleep(10)
+                                   bufsize=0)
+        time.sleep(9)
         cmd = "load msgrpc"
         cmd += " ServerHost=" + MSF_SERVER
         cmd += " ServerPort=" + MSF_PORT

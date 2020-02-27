@@ -12,6 +12,7 @@ import queue
 from dotenv import load_dotenv
 from threading import Timer, Lock, Thread
 from optparse import OptionParser
+from cmd import Cmd
 
 ################################################################################
 # Envionment imports (API Keys etc)
@@ -70,14 +71,24 @@ class MsfClient(object):
         self.port = kwargs.get('port', MSF_PORT)
         self.ssl = kwargs.get('ssl', False)
         self.user = kwargs.get('username', MSF_USER)
+        self.password = password
         #
         self.uri = kwargs.get('uri', '/api/')
         self.headers = {"Content-type": "binary/message-pack"}
         self.consoles = {} # dict of consoles {cid: MsfConsole Object}
 
-        print('     [*] Logging in user', self.user)
-        time.sleep(2)
-        self.login(self.user, password)
+    def login(self):
+        auth = self.msf_callback(MsfRpcMethod.AuthLogin,
+                                 [self.user, self.password])
+        try:
+            if auth['result'] == 'success':
+                self.token = auth['token']
+                token = self.add_perm_token()
+                self.token = token
+            else:
+                raise NameError(auth['result'])
+        except Exception as e:
+            raise MsfAuthError("MsfRPC: Authentication failed \n", e)
 
     def msf_callback(self, method, opts=[]):
         if method != 'auth.login':
@@ -94,23 +105,16 @@ class MsfClient(object):
 
         opts.insert(0, method)
         payload = encode(opts)
-        r = requests.post(url, data=payload, headers=self.headers, verify=False)
-        opts[:] = []  # Clear opts list
-
-        return convert(decode(r.content))  # convert all keys/vals to utf8
-
-    def login(self, user, password):
-        auth = self.msf_callback(MsfRpcMethod.AuthLogin, [user, password])
         try:
-            if auth['result'] == 'success':
-                self.token = auth['token']
-                token = self.add_perm_token()
-                self.token = token
-                print("     [*] Login successful with token:", token)
-                time.sleep(2)
-                return True
-        except Exception:
-            raise MsfAuthError("MsfRPC: Authentication failed")
+            r = requests.post(url, data=payload,            \
+                                   headers=self.headers,    \
+                                   verify=False,            \
+                                   timeout=5.0)
+        except Exception as e:
+            raise Exception(e)
+
+        opts[:] = []  # Clear opts list
+        return convert(decode(r.content))  # convert all keys/vals to utf8
 
     def add_perm_token(self):
         """
@@ -131,7 +135,9 @@ class MsfClient(object):
 # MSF Console
 ################################################################################
 
-class MsfConsole(object):
+class MsfConsole(Cmd):
+    prompt = 'msf>>>'
+
     def __init__(self, client, cid=None, cmd_queue=None):
         """
         Initialises an msf console object via RPC.
@@ -143,6 +149,7 @@ class MsfConsole(object):
         - consoleid : the console identifier if it exists already otherwise a
         new one will be created.
         """
+        super(MsfConsole, self).__init__()
         self.client = client
         self.cid = cid
         self.cmd_queue = cmd_queue # queue of direct commands (not from console)
@@ -155,10 +162,13 @@ class MsfConsole(object):
         r = self.client.msf_callback(MsfRpcMethod.ConsoleCreate)
         if 'id' in r:
             self.cid = r['id']
-            print("     [*] Console created with token: ", self.cid, '\n')
         else:
-            raise MsfRpcError("[-] Unable to create a new console")
-        self.msf_read_write() # discard metasploit startup output
+            raise MsfRpcError("unable to create a new console")
+        # discard metasploit startup output
+        self.msf_read_write()
+
+    def start_polling_subprocess(self):
+        Thread(target=self.start_polling).start()
 
     def start_polling(self):
         """I/O and Msf console poller"""
@@ -290,6 +300,24 @@ class MsfConsole(object):
             if c['id'] == self.cid:
                 return c['busy']
 
+    # Console level commands
+
+    def do_show(self, s):
+        print('running msf')
+
+    def do_back(self, s):
+        """
+        exit the application
+        """
+        print("[+] Closing application.\n")
+        return True
+
+    def default(self, cmd):
+        if cmd == 'working':
+            print('this is working as expected')
+        else:
+            print("*** Unknown Command, see 'help'")
+
 ################################################################################
 # Option Parsing and Encoding
 ################################################################################
@@ -345,8 +373,10 @@ def decode(data):
 
 if __name__ == '__main__':
     msf_client = MsfClient()
+    msf_client.login()
     msf_console = MsfConsole(msf_client)
-    msf_console.start_polling()
+    msf_console.start_polling_subprocess()
+    msf_console.cmdloop()
 
     # o = parseargs()
     # try:
