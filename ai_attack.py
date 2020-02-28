@@ -101,10 +101,3 @@ print("[@] scan_db.targets[" + str(hosts[0]) + "]\n")
 time.sleep(5)
 print(scan_db.targets[hosts[0]])
 time.sleep(5)
-
-
-
-
-
-
-#

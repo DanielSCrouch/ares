@@ -138,9 +138,12 @@ class Console(Cmd):
         return services
 
     def do_msf(self, cmd):
-        msf = self.services['msfconsole']
-        msf.prompt = 'msf' + self.prompt
-        msf.cmdloop()
+        if self.services['msfconsole'] is None:
+            print("[!] msfconsole service has not been created, see 'help create'")
+        else:
+            msf = self.services['msfconsole']
+            msf.prompt = 'msf' + self.prompt
+            msf.cmdloop()
 
     def default(self, cmd):
         if cmd == 'q':
