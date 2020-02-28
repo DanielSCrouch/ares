@@ -185,11 +185,7 @@ class MsfConsole(Cmd):
             msf_reply = self.write_read()
             if 'data' in msf_reply.keys() and len(msf_reply['data']) > 0:
                 print("[!] unexpected console data:")
-                print('data length: ', len(msf_reply['data']))
-                print('data type: ', type(msf_reply['data']))
-                print('data: ', msf_reply['data'])
-                self.display(msf_reply)
-                # self.precmd('')
+                self.display(str(msf_reply))
             time.sleep(0.5)
 
     def precmd(self, cmd):
@@ -197,83 +193,76 @@ class MsfConsole(Cmd):
 
     def write_read(self, cmd=None):
         """
-        Write and read data to/from the msf server.
+        Write and read data to/from the msf server, with prompt update.
+        Returns msf console response.
         """
         self.msf_lock.acquire()
         # send command
+        if cmd and not cmd.endswith('\n'):
+            cmd += '\n'
         if cmd:
-            if not cmd.endswith('\n'):
-                cmd += '\n'
-            self.client.msf_callback(MsfRpcMethod.ConsoleWrite, \
-                                     [self.cid, cmd])
-            # wait for response
-            while self.check_busy():
-                print('is busy is working')
-                time.sleep(0.1)
-        # collect response
-        msf_reply = self.client.msf_callback(MsfRpcMethod.ConsoleRead, \
-                                                            [self.cid])
+            opts = [self.cid, cmd]
+            self.client.msf_callback(MsfRpcMethod.ConsoleWrite, opts)
+
+        # wait until console not busy
+        time.sleep(0.1)
+        if self.check_busy():
+            print('[*] msf loading/busy')
+        timer = 0
+        while self.check_busy() and timer <= 10:
+            timer += 0.1
+            time.sleep(0.1)
+        if self.check_busy() and timer == 10:
+            print('[!] msf console timeout: busy for >10s')
+        # receive response
+        opts = [self.cid]
+        msf_reply = self.client.msf_callback(MsfRpcMethod.ConsoleRead, opts)
         # update msf prompt
         if 'prompt' in msf_reply.keys() and \
             msf_reply['prompt'] != self.prompt:
                 prompt = msf_reply['prompt'].replace('\x01', '')
                 prompt = prompt.replace('\x02', '')
                 self.prompt = prompt.replace("msf5 >", "msf>>>")
-        # release lock and print response
+        # return response
         self.msf_lock.release()
         return msf_reply
 
     def check_busy(self):
         """
         Checks if the console is busy.
-        Uses .list() method since .read() clears the data buffer.
         """
-        cons = self.client.msf_callback(MsfRpcMethod.ConsoleList)['consoles']
-        for c in cons:
-            if c['id'] == self.cid:
-                return False
-        return True
+        msf_reply = self.client.msf_callback(MsfRpcMethod.ConsoleList)
+        msf_consoles = msf_reply['consoles']
+        for console in msf_consoles:
+            if console['id'] == self.cid:
+                busy_status = console['busy']
+                return console['busy']
+        raise Exception("[!] Busy check, console not found.")
 
-    def display(self, output):
+    def display(self, str):
         """
         Write msf response string to display console
         """
-        if type(output) is str:
-            output = output.replace('\x01', '').replace('\x02', '')
-        elif type(output) is dict:
-            # parse msfrpc data types
-            if 'data' in output.keys() and output['data']:
-                output = output['data']
-            elif 'results' in output.keys() and output['result']:
-                output = "Results: " + output['result']
-        print(output)
+        str = str.replace('\x01', '')
+        str = str.replace('\x02', '')
+        print(str)
 
     def default(self, cmd):
         """
-        Default console command, defined by cmd
+        Default console command, defined by cmd superclass.
         """
-        try:
-            self.callback(cmd)
-        except Exception as e:
-            print("[!] Error: ", e)
+        self.callback(cmd)
 
     def callback(self, cmd):
         """
-        Forward cmd to msfrpc console and record response.
+        Forward cmd to msfrpc console then record and display response.
         """
-        busy = True
-        while busy:
-            msf_reply = self.write_read(cmd)
-            # display reply
-            self.display(msf_reply)
-            # record write and read with registrar
-            id = str(uuid.uuid4())
-            self.registrar.record(id, cmd, msf_reply)
-            print('cr: ', msf_reply)
-            if 'busy' in msf_reply.keys() and msf_reply['busy']:
-                print('Still busy')
-            else:
-                busy = False
+        msf_data = self.write_read(cmd)['data']
+        # record write and read with registrar
+        id = str(uuid.uuid4())
+        self.registrar.record(id, cmd, msf_data)
+        # display reply
+        self.display(msf_data)
 
     def sessionkill(self):
         """
