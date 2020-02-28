@@ -263,6 +263,7 @@ class MsfConsole(Cmd):
         self.registrar.record(id, cmd, msf_data)
         # display reply
         self.display(msf_data)
+        return msf_data
 
     def sessionkill(self):
         """

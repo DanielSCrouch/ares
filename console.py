@@ -75,17 +75,17 @@ class Console(Cmd):
             plugins = ([p for p in self.plugins.keys() if p.startswith(text)])
         return plugins
 
-    def do_create(self, cmd):
+    def do_start(self, cmd):
         """
-        Create services avaliable to console.
-        Options: msfconsole, database, planner
+        Start services avaliable to console.
+        Services: msfconsole, database, planner
         """
         cmds = cmd.split()
         if len(cmds) != 1:
             print("*** invalid number of arguments")
             return
         if cmds[0] not in self.services.keys():
-            print("*** invalid create option, see 'help create'")
+            print("*** invalid sreate option, see 'help sreate'")
             return
         # Metasploit Console
         if cmds[0] == 'msfconsole':
@@ -128,7 +128,7 @@ class Console(Cmd):
             print("[+] planner now avaliable")
             return
 
-    def complete_create(self, text, line, begidx, endidx):
+    def complete_start(self, text, line, begidx, endidx):
         if not text:
             try:
                 services = list(self.services.keys())
@@ -143,7 +143,7 @@ class Console(Cmd):
         Open msf console service.
         """
         if self.services['msfconsole'] is None:
-            print("[!] msfconsole service has not been created, see 'help create'")
+            print("[!] msfconsole service has not been started, see 'help start'")
         else:
             msf = self.services['msfconsole']
             msf.prompt = 'msf' + self.prompt
@@ -155,7 +155,7 @@ class Console(Cmd):
         """
         cmds = cmd.split()
         if self.services['database'] == None:
-            print("[!] database service has not been created, see 'help create'")
+            print("[!] database service has not been startd, see 'help start'")
         elif len(cmds) != 1:
             print("*** invalid number of arguments")
             return
@@ -187,7 +187,7 @@ class Console(Cmd):
         Display targets imported to database from scans.
         """
         if self.services['database'] is None:
-            print("[!] database service has not been created, see 'help create'")
+            print("[!] database service has not been startd, see 'help start'")
         else:
             targets = self.services['database'].get_targets()
             print("[*] target hosts identified: \n")
@@ -200,7 +200,7 @@ class Console(Cmd):
         """
         cmds = cmd.split()
         if self.services['database'] == None:
-            print("[!] database service has not been created, see 'help create'")
+            print("[!] database service has not been startd, see 'help start'")
         elif len(cmds) != 1:
             print("*** invalid number of arguments")
             return
