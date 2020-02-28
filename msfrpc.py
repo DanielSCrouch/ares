@@ -77,6 +77,7 @@ class MsfClient(object):
         self.uri = kwargs.get('uri', '/api/')
         self.headers = {"Content-type": "binary/message-pack"}
         self.consoles = {} # dict of consoles {cid: MsfConsole Object}
+        self.token = None
 
     def login(self):
         auth = self.msf_callback(MsfRpcMethod.AuthLogin,
@@ -92,6 +93,10 @@ class MsfClient(object):
             raise MsfAuthError("MsfRPC: Authentication failed \n", e)
 
     def msf_callback(self, method, opts=[]):
+        """
+        Send command/method to msfrpc console.
+        """
+        time.sleep(0.2) # sync time
         if method != 'auth.login':
             if self.token is None:
                 raise MsfAuthError("MsfRPC: Not Authenticated")
@@ -207,7 +212,7 @@ class MsfConsole(Cmd):
         # wait until console not busy
         time.sleep(0.1)
         if self.check_busy():
-            print('[*] msf loading/busy')
+            print('[*] msfconsole loading...')
         timer = 0
         while self.check_busy() and timer <= 10:
             timer += 0.1
@@ -245,6 +250,7 @@ class MsfConsole(Cmd):
         """
         str = str.replace('\x01', '')
         str = str.replace('\x02', '')
+        str = str.replace('[*]', '[m]')
         print(str)
 
     def default(self, cmd):

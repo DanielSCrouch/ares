@@ -1,12 +1,31 @@
 
 import os
 from cmd import Cmd
-#
+from dotenv import load_dotenv
+
+################################################################################
+# Local import
+################################################################################
+
 from plugins import Nessus, Metasploit
 from msfrpc import MsfClient, MsfConsole
 from database import Database
 from registrar import Registrar
 # from pymeta import Database
+
+################################################################################
+# Envionment variable imports (API Keys etc)
+################################################################################
+
+load_dotenv()
+NESSUS_USERNAME = os.getenv('NESSUS_USERNAME')
+NESSUS_PASSWORD = os.getenv('NESSUS_PASSWORD')
+NESSUS_HOST = os.getenv('NESSUS_HOST')
+NESSUS_PORT = os.getenv('NESSUS_PORT')
+SCAN_NAME = os.getenv('SCAN_NAME')
+SCAN_UUID = os.getenv('SCAN_UUID')
+SCAN_DESCRIPTION = os.getenv('SCAN_DESCRIPTION')
+TARGETS = os.getenv('TARGETS')
 
 ################################################################################
 # Main ARES Console
@@ -17,125 +36,127 @@ class Console(Cmd):
     intro = "\n\n            |     '||''|.   '||''''|   .|'''.|  \n           |||     ||   ||   ||  .     ||..  '  \n          |  ||    ||''|'    ||''|      ''|||.  \n         .''''|.   ||   |.   ||       .     '|| \n        .|.  .||. .||.  '|' .||.....| |'....|'  \n        \n        Automated  Recon  &  Exploit  Software\n\n"
     #
     registrar = Registrar()
-    plugins = {'nessus': None, 'metasploit': None}
-    services = {'msfconsole': None, 'database': None, 'planner': None}
-    msfclient = None
+    services = {'database'  : None, \
+                'planner'   : None, \
+                'metasploit': None, \
+                'msfclient' : None, \
+                'msfconsole': None, \
+                'nessus'    : None}
     scans = {'Basic_Scan': "nessus_scans_tmp/Basic_Network_Scan_Custom.csv"} # name: path
 
-    def do_load(self, cmd):
+    def do_connect(self, cmd):
         """
-        Load plugin services into console.
-        Options: nessus, metasploit
-        """
-        cmds = cmd.split()
-        if len(cmds) != 1:
-            print("*** invalid number of arguments")
-            return
-        if cmds[0] not in self.plugins.keys():
-            print("*** invalid service option, see 'help load'")
-            return
-        # Nessus
-        if cmds[0] == 'nessus':
-            print("[*] loading Nessus plugin")
-            try:
-                self.plugins['nessus'] = Nessus()
-            except Exception as e:
-                print('[!] Error: ', e)
-                return
-            try:
-                self.plugins['nessus'].start_service()
-            except Exception as e:
-                print('[!] Error: ', e)
-                return
-            print("[+] Nessus plugin loaded")
-            return
-        # Metasploit
-        if cmds[0] == 'metasploit':
-            print("[*] loading Metasploit plugin")
-            try:
-                self.plugins['metasploit'] = Metasploit()
-            except Exception as e:
-                print('[!] Error: ', e)
-                return
-            try:
-                self.plugins['metasploit'].start_service()
-            except Exception as e:
-                print('[!] Error: ', e)
-                return
-            print("[+] Metasploit plugin loaded")
-            return
-
-    def complete_load(self, text, line, begidx, endidx):
-        if not text:
-            try:
-                plugins = list(self.plugins.keys())
-            except Exception as e:
-                print(e)
-        else:
-            plugins = ([p for p in self.plugins.keys() if p.startswith(text)])
-        return plugins
-
-    def do_start(self, cmd):
-        """
-        Start services avaliable to console.
-        Services: msfconsole, database, planner
+        Connect services avaliable to console.
+        Services: database, planner, metasploit, msfclient, msfconsole, nessus
         """
         cmds = cmd.split()
         if len(cmds) != 1:
             print("*** invalid number of arguments")
             return
-        if cmds[0] not in self.services.keys():
-            print("*** invalid sreate option, see 'help sreate'")
+        if cmds[0] != 'services':
+            print("*** invalid connect option, see 'help connect'")
             return
-        # Metasploit Console
-        if cmds[0] == 'msfconsole':
-            if self.plugins['metasploit'] is None:
-                print("[!] Metasplsoit has not been loaded, see 'help load'")
-                return
-            try:
-                self.msfclient = MsfClient()
-                print("[*] athenticating Metasploit RPC user login")
-                self.msfclient.login()
-                print("[+] Metasploit RPC athenticating successful")
-            except Exception as e:
-                print("[!] Error: ", e)
-                print("[!] Recommendation: run app from new console as root'")
-                return
-            try:
-                self.services['msfconsole'] = MsfConsole(self.msfclient,
-                                                         self.registrar)
-            except Exception as e:
-                print('[!] Error: ', e)
-                return
-            print("[+] Metasploit console avaliable, see 'help msf'")
-            return
+
         # Database
-        if cmds[0] == 'database':
+
+        if self.services['database'] is None:
             try:
+                print("[*] connecting to database")
                 self.services['database'] = Database()
             except Exception as e:
-                print('[!] Error: ', e)
-                return
+                print('[!] Error1: ', e)
             print("[+] target database avaliable")
-            return
+
         # Planner
-        if cmds[0] == 'planner':
+
+        if self.services['planner'] is None:
             try:
+                print("[*] connecting to planner")
                 self.services['planner'] = Planner()
             except Exception as e:
-                print('[!] Error: ', e)
-                return
+                print('[!] Error2: ', e)
             print("[+] planner now avaliable")
-            return
 
-    def complete_start(self, text, line, begidx, endidx):
-        if not text:
+        # Metasploit Plugin
+
+        if self.services['metasploit'] is None:
             try:
-                services = list(self.services.keys())
+                print("[*] loading Metasploit plugin")
+                self.services['metasploit'] = Metasploit()
             except Exception as e:
-                print(e)
-        else:
-            services = ([s for s in self.services.keys() if s.startswith(text)])
+                print('[!] Error3: ', e)
+            try:
+                self.services['metasploit'].start_service()
+            except Exception as e:
+                print('[!] Error4: ', e)
+            print("[+] Metasploit plugin loaded")
+
+        # Metasploit Rpc Client
+
+        if self.services['msfclient'] is None:
+            try:
+                print("[*] creating msf rpc client")
+                self.services['msfclient'] = MsfClient()
+                print("[*] athenticating Metasploit RPC user login")
+                self.services['msfclient'].login()
+                print("[+] Metasploit RPC athenticating successful")
+            except Exception as e:
+                print("[!] Error5: ", e)
+                print("[!] Recommendation: run app from new console as root'")
+
+        # Metasploit Rpc Console
+
+        if self.services['msfconsole'] is None:
+            try:
+                print("[*] creating msf rpc console")
+                console = MsfConsole(self.services['msfclient'], self.registrar)
+                self.services['msfconsole'] = console
+            except Exception as e:
+                print('[!] Error6: ', e)
+            print("[+] Metasploit console avaliable, see 'help msf'")
+
+        # Nessus
+
+        if self.services['nessus'] is None:
+            try:
+                print("[*] loading Nessus plugin")
+                self.services['nessus'] = Nessus()
+            except Exception as e:
+                print('[!] Error7: ', e)
+            try:
+                self.services['nessus'].start_service()
+            except Exception as e:
+                print('[!] Error8: ', e)
+            print("[+] Nessus plugin loaded")
+
+            # Nessus - Metasploit Bridge
+
+            try:
+                print("[*] creating Nessus to Metasploit bridge")
+                msfconsole = self.services['msfconsole']
+                cmd = 'load nessus'
+                msf_reply = msfconsole.callback(cmd)
+            except Exception as e:
+                print('[!] Error8: ', e)
+
+            # Nessus - Authentication over bridge
+
+            try:
+                print("[*] authenticating Nessus via bridge")
+                msfconsole = self.services['msfconsole']
+                cmd = "nessus_connect " +       \
+                       NESSUS_USERNAME  + ':' + \
+                       NESSUS_PASSWORD  + '@' + \
+                       NESSUS_HOST      + ':' + \
+                       NESSUS_PORT      + ' ok'
+                msf_reply = msfconsole.callback(cmd)
+            except Exception as e:
+                print('[!] Error9: ', e)
+
+    def complete_connect(self, text, line, begidx, endidx):
+        services = ['services']
+        if text:
+            services = ([s for s in services if s.startswith(text)])
         return services
 
     def do_msf(self, cmd):
@@ -143,7 +164,7 @@ class Console(Cmd):
         Open msf console service.
         """
         if self.services['msfconsole'] is None:
-            print("[!] msfconsole service has not been started, see 'help start'")
+            print("[!] msfconsole service has not been connected, see 'help connect'")
         else:
             msf = self.services['msfconsole']
             msf.prompt = 'msf' + self.prompt
@@ -155,7 +176,7 @@ class Console(Cmd):
         """
         cmds = cmd.split()
         if self.services['database'] == None:
-            print("[!] database service has not been startd, see 'help start'")
+            print("[!] database service has not been connected, see 'help connect'")
         elif len(cmds) != 1:
             print("*** invalid number of arguments")
             return
@@ -167,7 +188,7 @@ class Console(Cmd):
             try:
                 self.services['database'].populate(path)
             except Exception as e:
-                print('[!] Error: ', e)
+                print('[!] Error10: ', e)
                 return
             print("[+] scan loaded into database")
             return
@@ -187,7 +208,7 @@ class Console(Cmd):
         Display targets imported to database from scans.
         """
         if self.services['database'] is None:
-            print("[!] database service has not been startd, see 'help start'")
+            print("[!] database service has not been connected, see 'help connect'")
         else:
             targets = self.services['database'].get_targets()
             print("[*] target hosts identified: \n")
@@ -200,7 +221,7 @@ class Console(Cmd):
         """
         cmds = cmd.split()
         if self.services['database'] == None:
-            print("[!] database service has not been startd, see 'help start'")
+            print("[!] database service has not been connected, see 'help connect'")
         elif len(cmds) != 1:
             print("*** invalid number of arguments")
             return
