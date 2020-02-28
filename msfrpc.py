@@ -8,11 +8,12 @@ import time
 import sys
 import select
 import queue
-
 from dotenv import load_dotenv
 from threading import Timer, Lock, Thread
 from optparse import OptionParser
 from cmd import Cmd
+#
+from registrar import Registrar
 
 ################################################################################
 # Envionment imports (API Keys etc)
@@ -138,7 +139,7 @@ class MsfClient(object):
 class MsfConsole(Cmd):
     prompt = 'msf>>>'
 
-    def __init__(self, client, registrar=None):
+    def __init__(self, client, registrar=Registrar()):
         """
         Initialises an msf console object via RPC.
 
@@ -181,15 +182,18 @@ class MsfConsole(Cmd):
         """
         self.polling = True
         while self.polling:
-            if not self.msf_lock:
-                msf_reply = self.write_read()
-                if 'data' in msf_reply.keys() and len(msf_reply['data']) > 0:
-                    print("[!] unexpected console data:")
-                    print('data length: ', len(msf_reply['data']))
-                    print('data type: ', type(msf_reply['data']))
-                    print('data: ', msf_reply['data'])
-                    self.display(msf_reply)
+            msf_reply = self.write_read()
+            if 'data' in msf_reply.keys() and len(msf_reply['data']) > 0:
+                print("[!] unexpected console data:")
+                print('data length: ', len(msf_reply['data']))
+                print('data type: ', type(msf_reply['data']))
+                print('data: ', msf_reply['data'])
+                self.display(msf_reply)
+                # self.precmd('')
             time.sleep(0.5)
+
+    def precmd(self, cmd):
+        return Cmd.precmd(self, cmd)
 
     def write_read(self, cmd=None):
         """
@@ -257,12 +261,19 @@ class MsfConsole(Cmd):
         """
         Forward cmd to msfrpc console and record response.
         """
-        msf_reply = self.write_read(cmd)
-        # display reply
-        self.display(msf_reply)
-        # record write and read with registrar
-        id = str(uuid.uuid4())
-        self.registrar.record(id, cmd, msf_reply)
+        busy = True
+        while busy:
+            msf_reply = self.write_read(cmd)
+            # display reply
+            self.display(msf_reply)
+            # record write and read with registrar
+            id = str(uuid.uuid4())
+            self.registrar.record(id, cmd, msf_reply)
+            print('cr: ', msf_reply)
+            if 'busy' in msf_reply.keys() and msf_reply['busy']:
+                print('Still busy')
+            else:
+                busy = False
 
     def sessionkill(self):
         """
@@ -354,7 +365,6 @@ if __name__ == '__main__':
     msf_client = MsfClient()
     msf_client.login()
     msf_console = MsfConsole(msf_client)
-    msf_console.start_polling_subprocess()
     msf_console.cmdloop()
 
     # o = parseargs()

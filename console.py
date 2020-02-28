@@ -20,6 +20,7 @@ class Console(Cmd):
     plugins = {'nessus': None, 'metasploit': None}
     services = {'msfconsole': None, 'database': None, 'planner': None}
     msfclient = None
+    scans = {'Basic_Scan': "nessus_scans_tmp/Basic_Network_Scan_Custom.csv"} # name: path
 
     def do_load(self, cmd):
         """
@@ -138,12 +139,75 @@ class Console(Cmd):
         return services
 
     def do_msf(self, cmd):
+        """
+        Open msf console service.
+        """
         if self.services['msfconsole'] is None:
             print("[!] msfconsole service has not been created, see 'help create'")
         else:
             msf = self.services['msfconsole']
             msf.prompt = 'msf' + self.prompt
             msf.cmdloop()
+
+    def do_import(self, cmd):
+        """
+        Import scans into database.
+        """
+        cmds = cmd.split()
+        if self.services['database'] == None:
+            print("[!] database service has not been created, see 'help create'")
+        elif len(cmds) != 1:
+            print("*** invalid number of arguments")
+            return
+        elif cmds[0] not in self.scans.keys():
+            print("*** invalid import option, see 'help import'")
+            return
+        else:
+            path = self.scans[cmds[0]]
+            try:
+                self.services['database'].populate(path)
+            except Exception as e:
+                print('[!] Error: ', e)
+                return
+            print("[+] scan loaded into database")
+            return
+
+    def complete_import(self, text, line, begidx, endidx):
+        if not text:
+            try:
+                scans = list(self.scans.keys())
+            except Exception as e:
+                print(e)
+        else:
+            scans = ([s for s in self.scans.keys() if s.startswith(text)])
+        return scans
+
+    def do_show_targets(self, cmd):
+        """
+        Display targets imported to database from scans.
+        """
+        if self.services['database'] is None:
+            print("[!] database service has not been created, see 'help create'")
+        else:
+            targets = self.services['database'].get_targets()
+            print("[*] target hosts identified: \n")
+            for target in targets:
+                print("        ", target)
+
+    def do_show_target(self, cmd):
+        """
+        Display the targets data.
+        """
+        cmds = cmd.split()
+        if self.services['database'] == None:
+            print("[!] database service has not been created, see 'help create'")
+        elif len(cmds) != 1:
+            print("*** invalid number of arguments")
+            return
+        elif cmds[0] in self.services['database'].get_targets():
+            target = self.services['database'].get_target(cmds[0])
+            print("[*] target identified: \n")
+            print(target)
 
     def default(self, cmd):
         if cmd == 'q':
@@ -173,10 +237,10 @@ class Console(Cmd):
     def precmd(self, cmd):
         return Cmd.precmd(self, cmd)
 
-    def do_input(self, s):
-        if s=='':
-            s = input('Your name please: ')
-        print('Hello', s)
+    # def do_input(self, s):
+    #     if s=='':
+    #         s = input('Your name please: ')
+    #     print('Hello', s)
 
 
 ################################################################################

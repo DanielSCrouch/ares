@@ -24,23 +24,34 @@ CSV_PATH = glob.glob(SCAN_REPORT_DIR + SCAN_NAME + '.csv')[0]
 
 class Database(object):
     """
-    A Database of knwon Targets and their attributes.
+    A Database of known Targets and their attributes.
     """
     def __init__(self):
         self.targets = {}
         self.services = []
         self.vulns = []
         self.installed_services = []
-        # populate database
-        self.populate()
 
-    def populate(self):
+    def get_targets(self):
+        """
+        Return list of targets.
+        """
+        return self.targets.keys()
+
+    def get_target(self, host):
+        """
+        Return the target specificed by the host IP address.
+        """
+        if host in self.targets.keys():
+            return self.targets[host]
+
+    def populate(self, csv_path=CSV_PATH):
         """
         Populate data with Targets, Services and Vulnerabilities.
         Controls csv read flow.
         """
 
-        with open(CSV_PATH, newline='') as csvfile:
+        with open(csv_path, newline='') as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
 
