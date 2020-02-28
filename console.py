@@ -11,7 +11,7 @@ from plugins import Nessus, Metasploit
 from msfrpc import MsfClient, MsfConsole
 from database import Database
 from registrar import Registrar
-# from pymeta import Database
+from msf_nessus_parser import policy_list_parser
 
 ################################################################################
 # Envionment variable imports (API Keys etc)
@@ -42,7 +42,10 @@ class Console(Cmd):
                 'msfclient' : None, \
                 'msfconsole': None, \
                 'nessus'    : None}
-    scans = {'Basic_Scan': "nessus_scans_tmp/Basic_Network_Scan_Custom.csv"} # name: path
+    scan_policies = {} # {name: UUID}
+
+    def do_s(self, cmd):
+        self.do_connect('services')
 
     def do_connect(self, cmd):
         """
@@ -153,6 +156,18 @@ class Console(Cmd):
             except Exception as e:
                 print('[!] Error9: ', e)
 
+            # Nessus - load scans
+
+            try:
+                print("[*] collecting scan policies from nessus")
+                msfconsole = self.services['msfconsole']
+                cmd = "nessus_policy_list"
+                msf_reply = msfconsole.callback(cmd, verbose=False)
+                self.scan_policies = policy_list_parser(msf_reply)
+                print("[+] scan policies are avaliable")
+            except Exception as e:
+                print('[!] Error10: ', e)
+
     def complete_connect(self, text, line, begidx, endidx):
         services = ['services']
         if text:
@@ -169,6 +184,29 @@ class Console(Cmd):
             msf = self.services['msfconsole']
             msf.prompt = 'msf' + self.prompt
             msf.cmdloop()
+
+    def do_scan(self, cmd):
+        cmds = cmd.split()
+        if len(cmds) != 1:
+            print("*** invalid number of arguments")
+            return
+        if cmds[0] not in ['policies']:
+            print("*** invalid connect option, see 'help connect'")
+            return
+        if cmds[0] == 'policies':
+            print("[*] scan policies avaliable: \n")
+            for policy_name in self.scan_policies.keys():
+                print("       " + policy_name)
+                print("       " + self.scan_policies[policy_name] + '\n')
+
+    def complete_scan(self, text, line, begidx, endidx):
+        options = ['policies', 'run']
+        if text:
+            scan_opts = ([o for o in options if o.startswith(text)])
+        return scan_opts
+
+
+
 
     def do_import(self, cmd):
         """
@@ -269,4 +307,4 @@ class Console(Cmd):
 ################################################################################
 
 if __name__ == '__main__':
-    Console().cmdloop()
+    console = Console().cmdloop()

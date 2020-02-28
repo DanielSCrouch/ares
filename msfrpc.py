@@ -259,16 +259,19 @@ class MsfConsole(Cmd):
         """
         self.callback(cmd)
 
-    def callback(self, cmd):
+    def callback(self, cmd, verbose=True):
         """
         Forward cmd to msfrpc console then record and display response.
+        Optional Arguments:
+        - verbose: print to cmd by default, set to false to prevent print 
         """
         msf_data = self.write_read(cmd)['data']
         # record write and read with registrar
         id = str(uuid.uuid4())
         self.registrar.record(id, cmd, msf_data)
         # display reply
-        self.display(msf_data)
+        if verbose:
+            self.display(msf_data)
         return msf_data
 
     def sessionkill(self):
