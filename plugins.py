@@ -68,7 +68,7 @@ class Nessus(object):
 # Nessus setup
 ################################################################################
 
-class Metaploit(object):
+class Metasploit(object):
     """
     Launches a Metasploit application as a subprocess.
     """
@@ -109,7 +109,7 @@ class Metaploit(object):
 
     def stop_service(self):
         """
-        Stops metaploit console.
+        Stops metasploit console.
         """
         # stop polling service
         self.polling = False

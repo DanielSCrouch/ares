@@ -2,21 +2,24 @@
 import os
 from cmd import Cmd
 #
-from plugins import Nessus, Metaploit
+from plugins import Nessus, Metasploit
 from msfrpc import MsfClient, MsfConsole
 from database import Database
+from registrar import Registrar
 # from pymeta import Database
 
+################################################################################
+# Main ARES Console
+################################################################################
 
 class Console(Cmd):
     prompt = ">>> "
     intro = "\n\n            |     '||''|.   '||''''|   .|'''.|  \n           |||     ||   ||   ||  .     ||..  '  \n          |  ||    ||''|'    ||''|      ''|||.  \n         .''''|.   ||   |.   ||       .     '|| \n        .|.  .||. .||.  '|' .||.....| |'....|'  \n        \n        Automated  Recon  &  Exploit  Software\n\n"
     #
-    plugins = {'nessus': None, 'metaploit': None}
+    registrar = Registrar()
+    plugins = {'nessus': None, 'metasploit': None}
     services = {'msfconsole': None, 'database': None, 'planner': None}
     msfclient = None
-    #
-    COLOURS = ['red', 'blue', 'green']
 
     def do_load(self, cmd):
         """
@@ -46,15 +49,15 @@ class Console(Cmd):
             print("[+] Nessus plugin loaded")
             return
         # Metasploit
-        if cmds[0] == 'metaploit':
+        if cmds[0] == 'metasploit':
             print("[*] loading Metasploit plugin")
             try:
-                self.plugins['metaploit'] = Metaploit()
+                self.plugins['metasploit'] = Metasploit()
             except Exception as e:
                 print('[!] Error: ', e)
                 return
             try:
-                self.plugins['metaploit'].start_service()
+                self.plugins['metasploit'].start_service()
             except Exception as e:
                 print('[!] Error: ', e)
                 return
@@ -85,12 +88,12 @@ class Console(Cmd):
             return
         # Metasploit Console
         if cmds[0] == 'msfconsole':
-            if self.plugins['metaploit'] is None:
-                print("[!] Metaplsoit has not been loaded, see 'help load'")
+            if self.plugins['metasploit'] is None:
+                print("[!] Metasplsoit has not been loaded, see 'help load'")
                 return
             try:
                 self.msfclient = MsfClient()
-                print("[*] athenticating Metaploit RPC user login")
+                print("[*] athenticating Metasploit RPC user login")
                 self.msfclient.login()
                 print("[+] Metasploit RPC athenticating successful")
             except Exception as e:
@@ -98,7 +101,8 @@ class Console(Cmd):
                 print("[!] Recommendation: run app from new console as root'")
                 return
             try:
-                self.services['msfconsole'] = MsfConsole(self.msfclient)
+                self.services['msfconsole'] = MsfConsole(self.msfclient,
+                                                         self.registrar)
             except Exception as e:
                 print('[!] Error: ', e)
                 return
