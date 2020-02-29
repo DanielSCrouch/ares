@@ -1,3 +1,2 @@
 # ARES
-Automated Recon & Exploit Software
-Cyber security attack generation tool
+Automated Recon & Exploit Software - A cyber security attack generation tool.
