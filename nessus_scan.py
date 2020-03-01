@@ -107,8 +107,7 @@ class NessusScan(object):
         cmd = "nessus_scan_export " + self.scanid + " CSV"
         msf_reply = self.msfconsole.callback(cmd, verbose=False)
         if 'export is ready' in msf_reply:
-            print("[+] export complete")
-            print("[*] dir: /opt/nessus/var/nessus/users/ares/files")
+            print("[+] export complete: dir: /opt/nessus/var/nessus/users/ares/files")
             return True
         else:
             print("[!] error updating model")

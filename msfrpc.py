@@ -251,6 +251,7 @@ class MsfConsole(Cmd):
         str = str.replace('\x01', '')
         str = str.replace('\x02', '')
         str = str.replace('[*]', '[m]')
+        str = str.rstrip()
         print(str)
 
     def default(self, cmd):
@@ -263,7 +264,7 @@ class MsfConsole(Cmd):
         """
         Forward cmd to msfrpc console then record and display response.
         Optional Arguments:
-        - verbose: print to cmd by default, set to false to prevent print 
+        - verbose: print to cmd by default, set to false to prevent print
         """
         msf_data = self.write_read(cmd)['data']
         # record write and read with registrar

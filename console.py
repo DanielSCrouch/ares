@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 # Local import
 ################################################################################
 
-from initial_setup import Setup
+from initial_setup import Setup, INTRO
 from nessus_scan import NessusScan
 from msf_commands import MsfCommands
 
@@ -39,13 +39,12 @@ TARGETS = os.getenv('TARGETS')
 class Console(Cmd):
     prompt = ">>> "
     intro = INTRO
-    #
-    services = {'database'  : None, \
-                'planner'   : None, \
-                'metasploit': None, \
-                'msfclient' : None, \
-                'msfconsole': None, \
-                'nessus'    : None}
+    database = None
+    planner = None
+    metasploit = None
+    msfclient = None
+    msfconsole = None
+    nessus = None
     targets = '10.91.251.173'
 
     def do_s(self, cmd):
@@ -66,26 +65,26 @@ class Console(Cmd):
             return
         # command execution
         # Database
-        if self.services['database'] is None:
-            self.services['database'] = Setup().database()
+        if self.database is None:
+            self.database = Setup().database()
         # Metasploit
-        if self.services['metasploit'] is None:
-            self.services['metasploit'] = Setup().metasploit()
+        if self.metasploit is None:
+            self.metasploit = Setup().metasploit()
         # Nessus
-        if self.services['nessus'] is None:
-            self.services['nessus'] = Setup().nessus()
+        if self.nessus is None:
+            self.nessus = Setup().nessus()
         # Planner
-        if self.services['planner'] is None:
+        if self.planner is None:
             planner = Setup().planner()
-            self.services['planner'] = planner
+            self.planner = planner
         # MsfClient
-        if self.services['msfclient'] is None:
+        if self.msfclient is None:
             msfclient = Setup().msfclient()
-            self.services['msfclient'] = msfclient
+            self.msfclient = msfclient
         # MsfConsole
-        if self.services['msfconsole'] is None:
+        if self.msfconsole is None:
             msfconsole = Setup().msfconsole(msfclient)
-            self.services['msfconsole'] = msfconsole
+            self.msfconsole = msfconsole
         # Connections
         Setup().nessus_bridge(msfconsole)
         Setup().database_bridge(msfconsole)
@@ -103,10 +102,10 @@ class Console(Cmd):
         """
         Open msf console service.
         """
-        if self.services['msfconsole'] is None:
+        if self.msfconsole is None:
             print("[!] msfconsole service has not been connected, see 'help connect'")
         else:
-            msf = self.services['msfconsole']
+            msf = self.msfconsole
             msf.prompt = 'msf' + self.prompt
             msf.cmdloop()
 
@@ -126,7 +125,7 @@ class Console(Cmd):
     def do_scan(self, cmd):
         cmds = cmd.split()
         # Command validation
-        scan_policies = MsfCommands(self.services['msfconsole']).scan_policies()
+        scan_policies = MsfCommands(self.msfconsole).scan_policies()
         if len(cmds) == 1 and cmds[0] not in ['policies']:
             print("*** invalid arguments, see 'help scan'")
             return
@@ -151,12 +150,9 @@ class Console(Cmd):
             uuid = scan_policies[scan_policy_name]
             scan_name = scan_policy_name.replace("Policy", "Scan")
             targets = self.targets
-            msfconsole = self.services['msfconsole']
+            msfconsole = self.msfconsole
             scan = NessusScan(uuid, scan_name, targets, msfconsole)
             scan.start_scan()
-            # except Exception as e:
-            #     print("[!] Error13: ", e)
-
 
     def complete_scan(self, text, line, begidx, endidx):
         options = ['policies', 'run']
@@ -170,7 +166,7 @@ class Console(Cmd):
         Import scans into database.
         """
         cmds = cmd.split()
-        if self.services['database'] == None:
+        if self.database == None:
             print("[!] database service has not been connected, see 'help connect'")
         elif len(cmds) != 1:
             print("*** invalid number of arguments")
@@ -181,7 +177,7 @@ class Console(Cmd):
         else:
             path = self.scans[cmds[0]]
             try:
-                self.services['database'].populate(path)
+                self.database.populate(path)
             except Exception as e:
                 print('[!] Error10: ', e)
                 return
@@ -202,10 +198,10 @@ class Console(Cmd):
         """
         Display targets imported to database from scans.
         """
-        if self.services['database'] is None:
+        if self.database is None:
             print("[!] database service has not been connected, see 'help connect'")
         else:
-            targets = self.services['database'].get_targets()
+            targets = self.database.get_targets()
             print("[*] target hosts identified: \n")
             for target in targets:
                 print("        ", target)
@@ -215,13 +211,13 @@ class Console(Cmd):
         Display the targets data.
         """
         cmds = cmd.split()
-        if self.services['database'] == None:
+        if self.database == None:
             print("[!] database service has not been connected, see 'help connect'")
         elif len(cmds) != 1:
             print("*** invalid number of arguments")
             return
-        elif cmds[0] in self.services['database'].get_targets():
-            target = self.services['database'].get_target(cmds[0])
+        elif cmds[0] in self.database.get_targets():
+            target = self.database.get_target(cmds[0])
             print("[*] target identified: \n")
             print(target)
 
