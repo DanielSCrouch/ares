@@ -40,6 +40,7 @@ class Console(Cmd):
     prompt = ">>> "
     intro = INTRO
     database = None
+    model = None
     planner = None
     metasploit = None
     msfclient = None
@@ -56,7 +57,7 @@ class Console(Cmd):
     def do_setup(self, cmd):
         """
         Setup services avaliable to console.
-        Services: database, planner, metasploit, msfclient, msfconsole, nessus
+        Services:
         """
         # command validation
         cmds = cmd.split()
@@ -164,13 +165,13 @@ class Console(Cmd):
         return scan_opts
 
 
-    def do_import(self, cmd):
+    def do_model(self, cmd):
         """
-        Import scans into database.
+        Import scans and database entries into model.
         """
         cmds = cmd.split()
-        if self.database == None:
-            print("[!] database service has not been setup, see 'help setup'")
+        if self.model == None:
+            print("[!] Model service has not been setup, see 'help setup'")
         elif len(cmds) != 1:
             print("*** invalid number of arguments")
             return
@@ -180,14 +181,14 @@ class Console(Cmd):
         else:
             path = self.scans[cmds[0]]
             try:
-                self.database.populate(path)
+                self.Model.populate(path)
             except Exception as e:
                 print('[!] Error10: ', e)
                 return
-            print("[+] scan loaded into database")
+            print("[+] scan loaded into model")
             return
 
-    def complete_import(self, text, line, begidx, endidx):
+    def complete_model(self, text, line, begidx, endidx):
         if not text:
             try:
                 scans = list(self.scans.keys())
@@ -199,12 +200,12 @@ class Console(Cmd):
 
     def do_show_targets(self, cmd):
         """
-        Display targets imported to database from scans.
+        Display targets imported to model from scans.
         """
-        if self.database is None:
-            print("[!] database service has not been setup, see 'help setup'")
+        if self.model is None:
+            print("[!] Model service has not been setup, see 'help setup'")
         else:
-            targets = self.database.get_targets()
+            targets = self.model.get_targets()
             print("[*] target hosts identified: \n")
             for target in targets:
                 print("        ", target)
@@ -214,13 +215,13 @@ class Console(Cmd):
         Display the targets data.
         """
         cmds = cmd.split()
-        if self.database == None:
-            print("[!] database service has not been setup, see 'help setup'")
+        if self.model == None:
+            print("[!] Model service has not been setup, see 'help setup'")
         elif len(cmds) != 1:
             print("*** invalid number of arguments")
             return
-        elif cmds[0] in self.database.get_targets():
-            target = self.database.get_target(cmds[0])
+        elif cmds[0] in self.model.get_targets():
+            target = self.model.get_target(cmds[0])
             print("[*] target identified: \n")
             print(target)
 

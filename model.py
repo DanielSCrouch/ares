@@ -19,12 +19,12 @@ SCAN_NAME = os.getenv('SCAN_NAME')
 CSV_PATH = glob.glob(SCAN_REPORT_DIR + SCAN_NAME + '.csv')[0]
 
 ################################################################################
-# Nessus Scan Database Object
+# Model Object built from Nessus scans and Metasploit's Postgres Database
 ################################################################################
 
-class Database(object):
+class Model(object):
     """
-    A Database of known Targets and their attributes.
+    A Model of known Targets and their attributes.
     """
     def __init__(self):
         self.targets = {}

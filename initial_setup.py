@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 
 from plugins import PostgreSQL, Nessus, Metasploit
 from msfrpc import MsfClient, MsfConsole
-from database import Database
+from model import Model
 from msf_commands import MsfCommands
 
 ################################################################################
