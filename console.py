@@ -22,6 +22,11 @@ NESSUS_USERNAME = os.getenv('NESSUS_USERNAME')
 NESSUS_PASSWORD = os.getenv('NESSUS_PASSWORD')
 NESSUS_HOST = os.getenv('NESSUS_HOST')
 NESSUS_PORT = os.getenv('NESSUS_PORT')
+POSTGRES_USER = os.getenv('POSTGRES_USER')
+POSTGRES_PASSWORD = os.getenv('POSTGRES_PASSWORD')
+POSTGRES_SERVER = os.getenv('POSTGRES_SERVER')
+POSTGRES_PORT = os.getenv('POSTGRES_PORT')
+POSTGRES_DB_NAME = os.getenv('POSTGRES_DB_NAME')
 SCAN_NAME = os.getenv('SCAN_NAME')
 SCAN_UUID = os.getenv('SCAN_UUID')
 SCAN_DESCRIPTION = os.getenv('SCAN_DESCRIPTION')
@@ -73,16 +78,6 @@ class Console(Cmd):
                 print("[+] PostgreSQL plugin loaded")
             except Exception as e:
                 print('[!] Error4: ', e)
-
-        # Planner
-
-        if self.services['planner'] is None:
-            try:
-                print("[*] connecting to planner")
-                self.services['planner'] = Planner()
-                print("[+] planner now avaliable")
-            except Exception as e:
-                print('[!] Error2: ', e)
 
         # Metasploit Plugin
 
@@ -160,7 +155,7 @@ class Console(Cmd):
             except Exception as e:
                 print('[!] Error9: ', e)
 
-            # Nessus - load scans
+            # Nessus - load scan policies
 
             try:
                 print("[*] collecting scan policies from nessus")
@@ -168,9 +163,61 @@ class Console(Cmd):
                 cmd = "nessus_policy_list"
                 msf_reply = msfconsole.callback(cmd, verbose=False)
                 self.scan_policies = policy_list_parser(msf_reply)
-                print("[+] scan policies are avaliable")
+                print("[+] scan policies are avaliable, see 'help scans'")
             except Exception as e:
                 print('[!] Error10: ', e)
+
+        # Connect Metasploit to Database
+
+        try:
+            print("[*] connecting Metasploit to database: ", POSTGRES_DB_NAME)
+            msfconsole = self.services['msfconsole']
+            cmd =  "db_connect "
+            cmd += POSTGRES_USER + ":" + POSTGRES_PASSWORD + "@"
+            cmd += POSTGRES_SERVER + ":" + POSTGRES_PORT + "/"
+            cmd += POSTGRES_DB_NAME
+            cmd = "db_status"
+            msf_reply = msfconsole.callback(cmd, verbose=True)
+            if POSTGRES_DB_NAME not in msf_reply:
+                print("[!] unable to connect to database")
+            else:
+                print("[+] Metasploit connected to database")
+        except Exception as e:
+            print('[!] Error11: ', e)
+
+        # Create new Metasploit workspace
+
+        # try:
+        #     print("[*] creating new Metasploit workspace: ", POSTGRES_DB_NAME)
+        #     msfconsole = self.services['msfconsole']
+        #     cmd =  "db_connect "
+        #     cmd += POSTGRES_USER + ":" + POSTGRES_PASSWORD + "@"
+        #     cmd += POSTGRES_SERVER + ":" + POSTGRES_PORT + "/"
+        #     cmd += POSTGRES_DB_NAME
+        #     cmd = "db_status"
+        #     msf_reply = msfconsole.callback(cmd, verbose=True)
+        #     if POSTGRES_DB_NAME not in msf_reply:
+        #         print("[!] unable to connect to database")
+        #     else:
+        #         print("[+] Metasploit connected to database")
+        # except Exception as e:
+        #     print('[!] Error11: ', e)
+
+        # AI Planner
+
+        if self.services['planner'] is None:
+            try:
+                print("[*] connecting to planner")
+                self.services['planner'] = Planner()
+                print("[+] planner now avaliable")
+            except Exception as e:
+                print('[!] Error2: ', e)
+
+
+
+        # Setup end
+
+        print("[*] startup complete")
 
     def complete_connect(self, text, line, begidx, endidx):
         services = ['services']
@@ -208,9 +255,6 @@ class Console(Cmd):
         if text:
             scan_opts = ([o for o in options if o.startswith(text)])
         return scan_opts
-
-
-
 
     def do_import(self, cmd):
         """

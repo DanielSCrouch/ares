@@ -122,6 +122,7 @@ class Metasploit(object):
     def __init__(self):
         self.process = None
         self.polling = False # check if subprocess has died
+        self.running = False
 
     def start_service(self):
         """
@@ -136,22 +137,20 @@ class Metasploit(object):
                                    universal_newlines = True, \
                                    shell=True,                \
                                    bufsize=0)
-        time.sleep(9)
+        time.sleep(8)
+
         cmd = "load msgrpc"
         cmd += " ServerHost=" + MSF_SERVER
         cmd += " ServerPort=" + MSF_PORT
         cmd += " Pass=" + MSF_PASSWORD
         cmd += " User=" + MSF_USER
         cmd += " \n"
-        # print("[+] Logining into Msf Rpc as ", MSF_USER)
         self.process.stdin.write(cmd)
         self.process.stdin.flush()
-        # self.process.stdin.close()
-        # out, err = self.process.communicate()
-        # print(out)
+
+        time.sleep(1)
+
         Thread(target=self.poll_server).start()
-        # return True if service has started
-        # self.process.wait(timeout=0.2)
         return True
 
     def stop_service(self):
@@ -186,8 +185,12 @@ class Metasploit(object):
 ################################################################################
 
 if __name__ == '__main__':
-    postgresql = PostgreSQL()
-    postgresql.start_service()
+    # postgresql = PostgreSQL()
+    # postgresql.start_service()
+    # nessus = Nessus()
+    # nessus.start_service()
+    metasploit = Metasploit()
+    metasploit.start_service()
 
 
 
