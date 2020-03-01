@@ -9,19 +9,15 @@ from dotenv import load_dotenv
 # Local import
 ################################################################################
 
-from plugins import PostgreSQL, Nessus, Metasploit
-from msfrpc import MsfClient, MsfConsole
-from database import Database
-from registrar import Registrar
-from msf_nessus_parser import policy_list_parser
+from initial_setup import Setup
 from nessus_scan import NessusScan
+from msf_commands import MsfCommands
 
 ################################################################################
 # Envionment variable imports (API Keys etc)
 ################################################################################
 
 load_dotenv()
-MSF_WORKSPACE_DEFAULT = os.getenv('MSF_WORKSPACE_DEFAULT')
 NESSUS_USERNAME = os.getenv('NESSUS_USERNAME')
 NESSUS_PASSWORD = os.getenv('NESSUS_PASSWORD')
 NESSUS_HOST = os.getenv('NESSUS_HOST')
@@ -42,16 +38,14 @@ TARGETS = os.getenv('TARGETS')
 
 class Console(Cmd):
     prompt = ">>> "
-    intro = "\n\n            |     '||''|.   '||''''|   .|'''.|  \n           |||     ||   ||   ||  .     ||..  '  \n          |  ||    ||''|'    ||''|      ''|||.  \n         .''''|.   ||   |.   ||       .     '|| \n        .|.  .||. .||.  '|' .||.....| |'....|'  \n        \n        Automated  Recon  &  Exploit  Software\n\n"
+    intro = INTRO
     #
-    registrar = Registrar()
     services = {'database'  : None, \
                 'planner'   : None, \
                 'metasploit': None, \
                 'msfclient' : None, \
                 'msfconsole': None, \
                 'nessus'    : None}
-    scan_policies = {} # {name: UUID}
     targets = '10.91.251.173'
 
     def do_s(self, cmd):
@@ -62,6 +56,7 @@ class Console(Cmd):
         Connect services avaliable to console.
         Services: database, planner, metasploit, msfclient, msfconsole, nessus
         """
+        # command validation
         cmds = cmd.split()
         if len(cmds) != 1:
             print("*** invalid number of arguments")
@@ -69,146 +64,33 @@ class Console(Cmd):
         if cmds[0] != 'services':
             print("*** invalid connect option, see 'help connect'")
             return
-
+        # command execution
         # Database
-
         if self.services['database'] is None:
-            try:
-                print("[*] loading PostgreSQL plugin")
-                self.services['database'] = PostgreSQL()
-            except Exception as e:
-                print('[!] Error3: ', e)
-            try:
-                self.services['database'].start_service()
-                print("[+] PostgreSQL plugin loaded")
-            except Exception as e:
-                print('[!] Error4: ', e)
-
-        # Metasploit Plugin
-
+            self.services['database'] = Setup().database()
+        # Metasploit
         if self.services['metasploit'] is None:
-            try:
-                print("[*] loading Metasploit plugin")
-                self.services['metasploit'] = Metasploit()
-            except Exception as e:
-                print('[!] Error3: ', e)
-            try:
-                self.services['metasploit'].start_service()
-                print("[+] Metasploit plugin loaded")
-            except Exception as e:
-                print('[!] Error4: ', e)
-
-        # Metasploit Rpc Client
-
-        if self.services['msfclient'] is None:
-            try:
-                print("[*] creating msf rpc client")
-                self.services['msfclient'] = MsfClient()
-                print("[*] athenticating Metasploit RPC user login")
-                self.services['msfclient'].login()
-                print("[+] Metasploit RPC athenticating successful")
-            except Exception as e:
-                print("[!] Error5: ", e)
-                print("[!] Recommendation: run app from new console as root'")
-
-        # Metasploit Rpc Console
-
-        if self.services['msfconsole'] is None:
-            try:
-                print("[*] creating msf rpc console")
-                console = MsfConsole(self.services['msfclient']) #, self.registrar
-                self.services['msfconsole'] = console
-                print("[+] Metasploit console avaliable, see 'help msf'")
-            except Exception as e:
-                print('[!] Error6: ', e)
-
+            self.services['metasploit'] = Setup().metasploit()
         # Nessus
-
         if self.services['nessus'] is None:
-            try:
-                print("[*] loading Nessus plugin")
-                self.services['nessus'] = Nessus()
-            except Exception as e:
-                print('[!] Error7: ', e)
-            try:
-                self.services['nessus'].start_service()
-                print("[+] Nessus plugin loaded")
-            except Exception as e:
-                print('[!] Error8: ', e)
-
-            # Nessus - Metasploit Bridge
-
-            try:
-                print("[*] creating Nessus to Metasploit bridge")
-                msfconsole = self.services['msfconsole']
-                cmd = 'load nessus'
-                msf_reply = msfconsole.callback(cmd)
-            except Exception as e:
-                print('[!] Error8: ', e)
-
-            # Nessus - Authentication over bridge
-
-            try:
-                print("[*] authenticating Nessus via bridge")
-                msfconsole = self.services['msfconsole']
-                cmd = "nessus_connect " +       \
-                       NESSUS_USERNAME  + ':' + \
-                       NESSUS_PASSWORD  + '@' + \
-                       NESSUS_HOST      + ':' + \
-                       NESSUS_PORT      + ' ok'
-                msf_reply = msfconsole.callback(cmd)
-            except Exception as e:
-                print('[!] Error9: ', e)
-
-            # Nessus - load scan policies
-
-            try:
-                print("[*] collecting scan policies from nessus")
-                msfconsole = self.services['msfconsole']
-                cmd = "nessus_policy_list"
-                msf_reply = msfconsole.callback(cmd, verbose=False)
-                self.scan_policies = policy_list_parser(msf_reply)
-                print("[+] scan policies are avaliable, see 'help scans'")
-            except Exception as e:
-                print('[!] Error10: ', e)
-
-        # Connect Metasploit to Database
-
-        try:
-            print("[*] connecting Metasploit to database: ", POSTGRES_DB_NAME)
-            msfconsole = self.services['msfconsole']
-            cmd =  "db_connect "
-            cmd += POSTGRES_USER + ":" + POSTGRES_PASSWORD + "@"
-            cmd += POSTGRES_SERVER + ":" + POSTGRES_PORT + "/"
-            cmd += POSTGRES_DB_NAME
-            msf_reply = msfconsole.callback(cmd, verbose=False)
-            if POSTGRES_DB_NAME not in msf_reply:
-                print("[!] unable to connect to database")
-            else:
-                print("[+] Metasploit connected to database")
-        except Exception as e:
-            print('[!] Error11: ', e)
-
-        # Workspace setup
-
-        try:
-            print("[*] setting up Metasploit workspace")
-            self.do_workspace('add ' + MSF_WORKSPACE_DEFAULT)
-        except Exception as e:
-            print('[!] Error11: ', e)
-
-        # AI Planner
-
+            self.services['nessus'] = Setup().nessus()
+        # Planner
         if self.services['planner'] is None:
-            try:
-                print("[*] connecting to planner")
-                self.services['planner'] = Planner()
-                print("[+] planner now avaliable")
-            except Exception as e:
-                print('[!] Error12: ', e)
-
+            planner = Setup().planner()
+            self.services['planner'] = planner
+        # MsfClient
+        if self.services['msfclient'] is None:
+            msfclient = Setup().msfclient()
+            self.services['msfclient'] = msfclient
+        # MsfConsole
+        if self.services['msfconsole'] is None:
+            msfconsole = Setup().msfconsole(msfclient)
+            self.services['msfconsole'] = msfconsole
+        # Connections
+        Setup().nessus_bridge(msfconsole)
+        Setup().database_bridge(msfconsole)
+        Setup().workspace(msfconsole)
         # Setup end
-
         print("[*] setup complete \n")
 
     def complete_connect(self, text, line, begidx, endidx):
@@ -244,13 +126,14 @@ class Console(Cmd):
     def do_scan(self, cmd):
         cmds = cmd.split()
         # Command validation
+        scan_policies = MsfCommands(self.services['msfconsole']).scan_policies()
         if len(cmds) == 1 and cmds[0] not in ['policies']:
             print("*** invalid arguments, see 'help scan'")
             return
         if len(cmds) == 2 and cmds[0] not in ['run']:
             print("*** invalid arguments, see 'help scan'")
             return
-        if len(cmds) == 2 and cmds[1] not in self.scan_policies.keys():
+        if len(cmds) == 2 and cmds[1] not in scan_policies.keys():
             print("*** invalid scan name, see 'scan policies'")
             return
         if len(cmds) == 2 and self.targets is None:
@@ -259,21 +142,21 @@ class Console(Cmd):
         # Command execution
         if cmds[0] == 'policies':
             print("[*] scan policies avaliable: \n")
-            for policy_name in self.scan_policies.keys():
+            for policy_name in scan_policies.keys():
                 print("       " + policy_name)
-                print("       " + self.scan_policies[policy_name] + '\n')
+                print("       " + scan_policies[policy_name] + '\n')
         if cmds[0] == 'run':
             scan_policy_name = cmds[1]
             #
-            uuid = self.scan_policies[scan_policy_name]
+            uuid = scan_policies[scan_policy_name]
             scan_name = scan_policy_name.replace("Policy", "Scan")
             targets = self.targets
             msfconsole = self.services['msfconsole']
-
             scan = NessusScan(uuid, scan_name, targets, msfconsole)
             scan.start_scan()
             # except Exception as e:
             #     print("[!] Error13: ", e)
+
 
     def complete_scan(self, text, line, begidx, endidx):
         options = ['policies', 'run']
@@ -281,36 +164,6 @@ class Console(Cmd):
             scan_opts = ([o for o in options if o.startswith(text)])
         return scan_opts
 
-
-    ############################################
-
-    def do_workspace(self, cmd):
-        """
-        Select workspace, or use options add to create new.
-        """
-        cmds = cmd.split()
-        if self.services['metasploit'] == None:
-            print("[!] Metasploit service has not been connected, see 'help connect'")
-        elif len(cmds) != 0 and len(cmds) != 2:
-            print("*** invalid number of arguments, see 'help workspace'")
-            return
-        if len(cmds) == 0:
-            msfconsole = self.services['msfconsole']
-            cmd = "workspace"
-            msf_reply = msfconsole.callback(cmd, verbose=False)
-            print("[*] workspaces: \n")
-            for line in msf_reply.splitlines():
-                print("    " + line)
-        elif len(cmds) == 2 and cmds[0] not in ['add', 'select', 'delete']:
-            print("*** invalid arguments, see 'help workspace'")
-            return
-        else:
-            method = cmds[0]
-            workspace_name = cmds[1]
-            if method == 'add':
-                msfconsole = self.services['msfconsole']
-                cmd = "workspace -a " + workspace_name
-                msf_reply = msfconsole.callback(cmd, verbose=True)
 
     def do_import(self, cmd):
         """
