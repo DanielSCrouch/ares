@@ -115,7 +115,7 @@ class Console(Cmd):
         if self.services['msfconsole'] is None:
             try:
                 print("[*] creating msf rpc console")
-                console = MsfConsole(self.services['msfclient'], self.registrar)
+                console = MsfConsole(self.services['msfclient']) #, self.registrar
                 self.services['msfconsole'] = console
                 print("[+] Metasploit console avaliable, see 'help msf'")
             except Exception as e:
@@ -292,7 +292,7 @@ class Console(Cmd):
             msfconsole = self.services['msfconsole']
             msf_reply = msfconsole.callback(cmd, verbose=True)
             if "successfully launched" in msf_reply:
-                print("Scan launched, waiting for completion")
+                print("[*] scan launched, waiting for completion")
             else:
                 print("[!] error launching scan")
                 return
@@ -303,22 +303,31 @@ class Console(Cmd):
                 print('...')
                 cmd = "nessus_scan_list"
                 msfconsole = self.services['msfconsole']
-                msf_reply = msfconsole.callback(cmd, verbose=True)
+                msf_reply = msfconsole.callback(cmd, verbose=False)
                 for line in msf_reply.splitlines():
                     if scanid in line and 'completed' in line:
                         print("[*] scan completed")
                         scanning = False
             # import scan result into database
+            print("[*] importing scan into database")
             cmd = "nessus_db_import " + scanid
             msfconsole = self.services['msfconsole']
             msf_reply = msfconsole.callback(cmd, verbose=True)
-
-
-
-
-
-
-
+            if 'Done' in msf_reply:
+                print("[+] import to database complete")
+            else:
+                print("[!] error importing scan")
+                return
+            # export scan result into database
+            # dir: /opt/nessus/var/nessus/users/ares/files
+            print("[*] updating model")
+            cmd = "nessus_scan_export " + scanid + " CSV"
+            msfconsole = self.services['msfconsole']
+            msf_reply = msfconsole.callback(cmd, verbose=False)
+            if 'export is ready' in msf_reply:
+                print("[+] model updated")
+            else:
+                print("[!] error updating model")
 
     def complete_scan(self, text, line, begidx, endidx):
         options = ['policies', 'run']
