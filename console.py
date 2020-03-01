@@ -1,5 +1,7 @@
 
 import os
+import re
+import time
 from cmd import Cmd
 from dotenv import load_dotenv
 
@@ -49,6 +51,7 @@ class Console(Cmd):
                 'msfconsole': None, \
                 'nessus'    : None}
     scan_policies = {} # {name: UUID}
+    targets = '10.91.251.173'
 
     def do_s(self, cmd):
         self.do_connect('services')
@@ -224,25 +227,107 @@ class Console(Cmd):
             msf.prompt = 'msf' + self.prompt
             msf.cmdloop()
 
-    def do_scan(self, cmd):
+    def do_target(self, cmd):
+        """
+        Set target IP range.
+        """
         cmds = cmd.split()
         if len(cmds) != 1:
-            print("*** invalid number of arguments")
+            print("*** invalid arguments, see 'help scan'")
             return
-        if cmds[0] not in ['policies']:
-            print("*** invalid connect option, see 'help connect'")
+        else:
+            self.targets = cmd
+
+    ############################################
+
+    def do_scan(self, cmd):
+        cmds = cmd.split()
+        # Command validation
+        if len(cmds) == 1 and cmds[0] not in ['policies']:
+            print("*** invalid arguments, see 'help scan'")
             return
+        if len(cmds) == 2 and cmds[0] not in ['run']:
+            print("*** invalid arguments, see 'help scan'")
+            return
+        if len(cmds) == 2 and cmds[1] not in self.scan_policies.keys():
+            print("*** invalid scan name, see 'scan policies'")
+            return
+        if len(cmds) == 2 and self.targets is None:
+            print("*** no target selected, see 'help target'")
+            return
+        # Command execution
         if cmds[0] == 'policies':
             print("[*] scan policies avaliable: \n")
             for policy_name in self.scan_policies.keys():
                 print("       " + policy_name)
                 print("       " + self.scan_policies[policy_name] + '\n')
+        if cmds[0] == 'run':
+            scanid = None
+            scan_policy_name = cmds[1]
+            print("[*] running scan...")
+            uuid = self.scan_policies[scan_policy_name]
+            name = scan_policy_name.replace("Policy", "Scan")
+            desc = 'none'
+            target =self.targets
+            cmd = "nessus_scan_new "
+            cmd += uuid + " "
+            cmd += name + " "
+            cmd += desc + " "
+            cmd += target
+            msfconsole = self.services['msfconsole']
+            msf_reply = msfconsole.callback(cmd, verbose=False)
+            if 'scan added' not in msf_reply:
+                print("[!] error creating scan")
+                return
+            try:
+                regex = "nessus_scan_launch (\d+)"
+                m = re.search(regex, msf_reply, re.IGNORECASE)
+                scanid = m.group(1)
+                i = int(scanid) # check value is integer
+                print("[*] scan created with ID: ", scanid)
+            except:
+                print("[!] error creating scan")
+                return
+            cmd = "nessus_scan_launch " + scanid
+            msfconsole = self.services['msfconsole']
+            msf_reply = msfconsole.callback(cmd, verbose=True)
+            if "successfully launched" in msf_reply:
+                print("Scan launched, waiting for completion")
+            else:
+                print("[!] error launching scan")
+                return
+            # poll nessus for scan completion
+            scanning = True
+            while scanning:
+                time.sleep(5)
+                print('...')
+                cmd = "nessus_scan_list"
+                msfconsole = self.services['msfconsole']
+                msf_reply = msfconsole.callback(cmd, verbose=True)
+                for line in msf_reply.splitlines():
+                    if scanid in line and 'completed' in line:
+                        print("[*] scan completed")
+                        scanning = False
+            # import scan result into database
+            cmd = "nessus_db_import " + scanid
+            msfconsole = self.services['msfconsole']
+            msf_reply = msfconsole.callback(cmd, verbose=True)
+
+
+
+
+
+
+
 
     def complete_scan(self, text, line, begidx, endidx):
         options = ['policies', 'run']
         if text:
             scan_opts = ([o for o in options if o.startswith(text)])
         return scan_opts
+
+
+    ############################################
 
     def do_workspace(self, cmd):
         """
