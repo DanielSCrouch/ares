@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 # Local import
 ################################################################################
 
-from plugins import Nessus, Metasploit
+from plugins import PostgreSQL, Nessus, Metasploit
 from msfrpc import MsfClient, MsfConsole
 from database import Database
 from registrar import Registrar
@@ -64,11 +64,15 @@ class Console(Cmd):
 
         if self.services['database'] is None:
             try:
-                print("[*] connecting to database")
-                self.services['database'] = Database()
+                print("[*] loading PostgreSQL plugin")
+                self.services['database'] = PostgreSQL()
             except Exception as e:
-                print('[!] Error1: ', e)
-            print("[+] target database avaliable")
+                print('[!] Error3: ', e)
+            try:
+                self.services['database'].start_service()
+                print("[+] PostgreSQL plugin loaded")
+            except Exception as e:
+                print('[!] Error4: ', e)
 
         # Planner
 
@@ -76,9 +80,9 @@ class Console(Cmd):
             try:
                 print("[*] connecting to planner")
                 self.services['planner'] = Planner()
+                print("[+] planner now avaliable")
             except Exception as e:
                 print('[!] Error2: ', e)
-            print("[+] planner now avaliable")
 
         # Metasploit Plugin
 
@@ -90,9 +94,9 @@ class Console(Cmd):
                 print('[!] Error3: ', e)
             try:
                 self.services['metasploit'].start_service()
+                print("[+] Metasploit plugin loaded")
             except Exception as e:
                 print('[!] Error4: ', e)
-            print("[+] Metasploit plugin loaded")
 
         # Metasploit Rpc Client
 
@@ -114,9 +118,9 @@ class Console(Cmd):
                 print("[*] creating msf rpc console")
                 console = MsfConsole(self.services['msfclient'], self.registrar)
                 self.services['msfconsole'] = console
+                print("[+] Metasploit console avaliable, see 'help msf'")
             except Exception as e:
                 print('[!] Error6: ', e)
-            print("[+] Metasploit console avaliable, see 'help msf'")
 
         # Nessus
 
@@ -128,9 +132,9 @@ class Console(Cmd):
                 print('[!] Error7: ', e)
             try:
                 self.services['nessus'].start_service()
+                print("[+] Nessus plugin loaded")
             except Exception as e:
                 print('[!] Error8: ', e)
-            print("[+] Nessus plugin loaded")
 
             # Nessus - Metasploit Bridge
 
