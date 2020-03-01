@@ -18,6 +18,7 @@ from msf_nessus_parser import policy_list_parser
 ################################################################################
 
 load_dotenv()
+MSF_WORKSPACE_DEFAULT = os.getenv('MSF_WORKSPACE_DEFAULT')
 NESSUS_USERNAME = os.getenv('NESSUS_USERNAME')
 NESSUS_PASSWORD = os.getenv('NESSUS_PASSWORD')
 NESSUS_HOST = os.getenv('NESSUS_HOST')
@@ -176,8 +177,7 @@ class Console(Cmd):
             cmd += POSTGRES_USER + ":" + POSTGRES_PASSWORD + "@"
             cmd += POSTGRES_SERVER + ":" + POSTGRES_PORT + "/"
             cmd += POSTGRES_DB_NAME
-            cmd = "db_status"
-            msf_reply = msfconsole.callback(cmd, verbose=True)
+            msf_reply = msfconsole.callback(cmd, verbose=False)
             if POSTGRES_DB_NAME not in msf_reply:
                 print("[!] unable to connect to database")
             else:
@@ -185,23 +185,13 @@ class Console(Cmd):
         except Exception as e:
             print('[!] Error11: ', e)
 
-        # Create new Metasploit workspace
+        # Workspace setup
 
-        # try:
-        #     print("[*] creating new Metasploit workspace: ", POSTGRES_DB_NAME)
-        #     msfconsole = self.services['msfconsole']
-        #     cmd =  "db_connect "
-        #     cmd += POSTGRES_USER + ":" + POSTGRES_PASSWORD + "@"
-        #     cmd += POSTGRES_SERVER + ":" + POSTGRES_PORT + "/"
-        #     cmd += POSTGRES_DB_NAME
-        #     cmd = "db_status"
-        #     msf_reply = msfconsole.callback(cmd, verbose=True)
-        #     if POSTGRES_DB_NAME not in msf_reply:
-        #         print("[!] unable to connect to database")
-        #     else:
-        #         print("[+] Metasploit connected to database")
-        # except Exception as e:
-        #     print('[!] Error11: ', e)
+        try:
+            print("[*] setting up Metasploit workspace")
+            self.do_workspace('add ' + MSF_WORKSPACE_DEFAULT)
+        except Exception as e:
+            print('[!] Error11: ', e)
 
         # AI Planner
 
@@ -213,11 +203,9 @@ class Console(Cmd):
             except Exception as e:
                 print('[!] Error2: ', e)
 
-
-
         # Setup end
 
-        print("[*] startup complete")
+        print("[*] setup complete \n")
 
     def complete_connect(self, text, line, begidx, endidx):
         services = ['services']
@@ -255,6 +243,34 @@ class Console(Cmd):
         if text:
             scan_opts = ([o for o in options if o.startswith(text)])
         return scan_opts
+
+    def do_workspace(self, cmd):
+        """
+        Select workspace, or use options add to create new.
+        """
+        cmds = cmd.split()
+        if self.services['metasploit'] == None:
+            print("[!] Metasploit service has not been connected, see 'help connect'")
+        elif len(cmds) != 0 and len(cmds) != 2:
+            print("*** invalid number of arguments, see 'help workspace'")
+            return
+        if len(cmds) == 0:
+            msfconsole = self.services['msfconsole']
+            cmd = "workspace"
+            msf_reply = msfconsole.callback(cmd, verbose=False)
+            print("[*] workspaces: \n")
+            for line in msf_reply.splitlines():
+                print("    " + line)
+        elif len(cmds) == 2 and cmds[0] not in ['add', 'select', 'delete']:
+            print("*** invalid arguments, see 'help workspace'")
+            return
+        else:
+            method = cmds[0]
+            workspace_name = cmds[1]
+            if method == 'add':
+                msfconsole = self.services['msfconsole']
+                cmd = "workspace -a " + workspace_name
+                msf_reply = msfconsole.callback(cmd, verbose=True)
 
     def do_import(self, cmd):
         """
