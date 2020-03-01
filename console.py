@@ -14,6 +14,7 @@ from msfrpc import MsfClient, MsfConsole
 from database import Database
 from registrar import Registrar
 from msf_nessus_parser import policy_list_parser
+from nessus_scan import NessusScan
 
 ################################################################################
 # Envionment variable imports (API Keys etc)
@@ -204,7 +205,7 @@ class Console(Cmd):
                 self.services['planner'] = Planner()
                 print("[+] planner now avaliable")
             except Exception as e:
-                print('[!] Error2: ', e)
+                print('[!] Error12: ', e)
 
         # Setup end
 
@@ -262,72 +263,17 @@ class Console(Cmd):
                 print("       " + policy_name)
                 print("       " + self.scan_policies[policy_name] + '\n')
         if cmds[0] == 'run':
-            scanid = None
             scan_policy_name = cmds[1]
-            print("[*] running scan...")
+            #
             uuid = self.scan_policies[scan_policy_name]
-            name = scan_policy_name.replace("Policy", "Scan")
-            desc = 'none'
-            target =self.targets
-            cmd = "nessus_scan_new "
-            cmd += uuid + " "
-            cmd += name + " "
-            cmd += desc + " "
-            cmd += target
+            scan_name = scan_policy_name.replace("Policy", "Scan")
+            targets = self.targets
             msfconsole = self.services['msfconsole']
-            msf_reply = msfconsole.callback(cmd, verbose=False)
-            if 'scan added' not in msf_reply:
-                print("[!] error creating scan")
-                return
-            try:
-                regex = "nessus_scan_launch (\d+)"
-                m = re.search(regex, msf_reply, re.IGNORECASE)
-                scanid = m.group(1)
-                i = int(scanid) # check value is integer
-                print("[*] scan created with ID: ", scanid)
-            except:
-                print("[!] error creating scan")
-                return
-            cmd = "nessus_scan_launch " + scanid
-            msfconsole = self.services['msfconsole']
-            msf_reply = msfconsole.callback(cmd, verbose=True)
-            if "successfully launched" in msf_reply:
-                print("[*] scan launched, waiting for completion")
-            else:
-                print("[!] error launching scan")
-                return
-            # poll nessus for scan completion
-            scanning = True
-            while scanning:
-                time.sleep(5)
-                print('...')
-                cmd = "nessus_scan_list"
-                msfconsole = self.services['msfconsole']
-                msf_reply = msfconsole.callback(cmd, verbose=False)
-                for line in msf_reply.splitlines():
-                    if scanid in line and 'completed' in line:
-                        print("[*] scan completed")
-                        scanning = False
-            # import scan result into database
-            print("[*] importing scan into database")
-            cmd = "nessus_db_import " + scanid
-            msfconsole = self.services['msfconsole']
-            msf_reply = msfconsole.callback(cmd, verbose=True)
-            if 'Done' in msf_reply:
-                print("[+] import to database complete")
-            else:
-                print("[!] error importing scan")
-                return
-            # export scan result into database
-            # dir: /opt/nessus/var/nessus/users/ares/files
-            print("[*] updating model")
-            cmd = "nessus_scan_export " + scanid + " CSV"
-            msfconsole = self.services['msfconsole']
-            msf_reply = msfconsole.callback(cmd, verbose=False)
-            if 'export is ready' in msf_reply:
-                print("[+] model updated")
-            else:
-                print("[!] error updating model")
+
+            scan = NessusScan(uuid, scan_name, targets, msfconsole)
+            scan.start_scan()
+            # except Exception as e:
+            #     print("[!] Error13: ", e)
 
     def complete_scan(self, text, line, begidx, endidx):
         options = ['policies', 'run']
