@@ -252,7 +252,7 @@ class MsfConsole(Cmd):
         str = str.replace('\x02', '')
         str = str.replace('[*]', '[m]')
         str = str.rstrip()
-        print(str)
+        print(str +'\n')
 
     def default(self, cmd):
         """

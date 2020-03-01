@@ -48,11 +48,14 @@ class Console(Cmd):
     targets = '10.91.251.173'
 
     def do_s(self, cmd):
-        self.do_connect('services')
-
-    def do_connect(self, cmd):
         """
-        Connect services avaliable to console.
+        Calls setup.
+        """
+        self.do_setup('services')
+
+    def do_setup(self, cmd):
+        """
+        Setup services avaliable to console.
         Services: database, planner, metasploit, msfclient, msfconsole, nessus
         """
         # command validation
@@ -61,7 +64,7 @@ class Console(Cmd):
             print("*** invalid number of arguments")
             return
         if cmds[0] != 'services':
-            print("*** invalid connect option, see 'help connect'")
+            print("*** invalid setup option, see 'help setup'")
             return
         # command execution
         # Database
@@ -92,7 +95,7 @@ class Console(Cmd):
         # Setup end
         print("[*] setup complete \n")
 
-    def complete_connect(self, text, line, begidx, endidx):
+    def complete_setup(self, text, line, begidx, endidx):
         services = ['services']
         if text:
             services = ([s for s in services if s.startswith(text)])
@@ -103,7 +106,7 @@ class Console(Cmd):
         Open msf console service.
         """
         if self.msfconsole is None:
-            print("[!] msfconsole service has not been connected, see 'help connect'")
+            print("[!] msfconsole service has not been setup, see 'help setup'")
         else:
             msf = self.msfconsole
             msf.prompt = 'msf' + self.prompt
@@ -167,7 +170,7 @@ class Console(Cmd):
         """
         cmds = cmd.split()
         if self.database == None:
-            print("[!] database service has not been connected, see 'help connect'")
+            print("[!] database service has not been setup, see 'help setup'")
         elif len(cmds) != 1:
             print("*** invalid number of arguments")
             return
@@ -199,7 +202,7 @@ class Console(Cmd):
         Display targets imported to database from scans.
         """
         if self.database is None:
-            print("[!] database service has not been connected, see 'help connect'")
+            print("[!] database service has not been setup, see 'help setup'")
         else:
             targets = self.database.get_targets()
             print("[*] target hosts identified: \n")
@@ -212,7 +215,7 @@ class Console(Cmd):
         """
         cmds = cmd.split()
         if self.database == None:
-            print("[!] database service has not been connected, see 'help connect'")
+            print("[!] database service has not been setup, see 'help setup'")
         elif len(cmds) != 1:
             print("*** invalid number of arguments")
             return
