@@ -132,7 +132,6 @@ class NessusScan(object):
         Transfer file from Nessus's /opt/.. folder to local /nessus_scan_tmp,
         Updates owner to 'ares'
         """
-        # command = "cp -r " + NESSUS_DEF_PATH + " " + SCAN_REPORT_DIR
         shell_cmd = "install -C -m 775 -o ares -g ares "
         shell_cmd += NESSUS_DEF_DIR + "/" +self.scan_name + "*.csv "
         shell_cmd += NESSUS_LOC_DIR
