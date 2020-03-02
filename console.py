@@ -138,7 +138,7 @@ class Console(Cmd):
             print("[*] scan policies avaliable: \n")
             for policy_name in scan_policies.keys():
                 print("       " + policy_name)
-                print("       " + scan_policies[policy_name] + '\n')
+                print("       " + scan_policies[policy_name])
         if cmds[0] == 'run':
             scan_policy_name = cmds[1]
             #
@@ -205,7 +205,7 @@ class Console(Cmd):
             targets = self.model.get_targets()
             print("[*] target hosts identified: \n")
             for target in targets:
-                print("        ", target, '\n')
+                print("        ", target)
 
     def do_show_target(self, cmd):
         """
@@ -219,7 +219,7 @@ class Console(Cmd):
             return
         elif cmds[0] in self.model.get_targets():
             target = self.model.get_target(cmds[0])
-            print("[*] target identified: \n")
+            print("[*] target identified:")
             print(target)
 
     def default(self, cmd):
@@ -269,7 +269,7 @@ class Console(Cmd):
     def postcmd(self, stop, line):
         print('\n')
         if stop:
-            return True 
+            return True
 
     # def do_input(self, s):
     #     if s=='':

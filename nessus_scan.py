@@ -14,8 +14,8 @@ from dotenv import load_dotenv
 ################################################################################
 
 load_dotenv()
-NESSUS_DEF_PATH = os.getenv('NESSUS_DEF_PATH')
-SCAN_REPORT_DIR = os.getenv('SCAN_REPORT_DIR')
+NESSUS_DEF_DIR = os.getenv('NESSUS_DEF_DIR')
+NESSUS_LOC_DIR = os.getenv('NESSUS_LOC_DIR')
 
 class NessusScan(object):
 
@@ -43,6 +43,8 @@ class NessusScan(object):
         if not self.import_scan():
             return False
         if not self.export_scan():
+            return False
+        if not self.local_copy():
             return False
         return True
 
@@ -120,14 +122,29 @@ class NessusScan(object):
         msf_reply = self.msfconsole.callback(cmd, verbose=False)
         if 'export is ready' in msf_reply:
             print("[+] export complete: dir: /opt/nessus/var/nessus/users/ares/files")
-            command = "cp -r " + NESSUS_DEF_PATH + " " + SCAN_REPORT_DIR
-            process = subprocess.Popen(command, \
-                                       universal_newlines = True, \
-                                       shell=True,                \
-                                       bufsize=0)
-            process.wait()
-            print("[+] local copy: dir: /nessus_scans_tmp")
             return True
         else:
             print("[!] error updating model")
             return False
+
+    def local_copy(self):
+        """
+        Transfer file from Nessus's /opt/.. folder to local /nessus_scan_tmp,
+        Updates owner to 'ares'
+        """
+        # command = "cp -r " + NESSUS_DEF_PATH + " " + SCAN_REPORT_DIR
+        shell_cmd = "install -C -m 775 -o ares -g ares "
+        shell_cmd += NESSUS_DEF_DIR + "/" +self.scan_name + "*.csv "
+        shell_cmd += NESSUS_LOC_DIR
+        process = subprocess.Popen(shell_cmd,                 \
+                                   universal_newlines = True, \
+                                   stdout = subprocess.PIPE,  \
+                                   stderr = subprocess.PIPE,  \
+                                   shell=True,                \
+                                   bufsize=0)
+        out, err = process.communicate()
+        if not err:
+            print("[+] local copy: dir: /nessus_scans_tmp")
+            return True
+        else:
+            print("[!] Error: transfering scan csv export to local folder ")
