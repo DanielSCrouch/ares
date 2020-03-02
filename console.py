@@ -255,7 +255,7 @@ class Console(Cmd):
             print("[*] closing metasploit sub-process")
         except Exception as e:
             print("Error: ", e)
-        print("[+] Closing application.\n")
+        print("[+] Closing application.")
 
         return True
 
@@ -266,8 +266,10 @@ class Console(Cmd):
     def precmd(self, cmd):
         return Cmd.precmd(self, cmd)
 
-    def postloop(self):
+    def postcmd(self, stop, line):
         print('\n')
+        if stop:
+            return True 
 
     # def do_input(self, s):
     #     if s=='':
