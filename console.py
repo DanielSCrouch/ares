@@ -85,7 +85,7 @@ class Console(Cmd):
         Setup().database_bridge(msfconsole)
         Setup().workspace(msfconsole)
         # Setup end
-        print("[*] setup complete \n")
+        print("[*] setup complete")
 
     def complete_setup(self, text, line, begidx, endidx):
         services = ['services']
@@ -205,7 +205,7 @@ class Console(Cmd):
             targets = self.model.get_targets()
             print("[*] target hosts identified: \n")
             for target in targets:
-                print("        ", target)
+                print("        ", target, '\n')
 
     def do_show_target(self, cmd):
         """
@@ -240,7 +240,23 @@ class Console(Cmd):
         """
         exit the application
         """
+        try:
+            self.msfconsole.stop_polling()
+            print("[*] stopping msfconsole")
+        except Exception as e:
+            print("Error: ", e)
+        try:
+            self.msfclient.close_connection()
+            print("[*] closing msfclient connect")
+        except Exception as e:
+            print("Error: ", e)
+        try:
+            self.metasploit.stop_service()
+            print("[*] closing metasploit sub-process")
+        except Exception as e:
+            print("Error: ", e)
         print("[+] Closing application.\n")
+
         return True
 
     do_EOF = do_exit # assign end-of-line to exit
@@ -249,6 +265,9 @@ class Console(Cmd):
 
     def precmd(self, cmd):
         return Cmd.precmd(self, cmd)
+
+    def postloop(self):
+        print('\n')
 
     # def do_input(self, s):
     #     if s=='':

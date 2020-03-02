@@ -1,8 +1,10 @@
-import subprocess
+
+
 import time
 import os
 from threading import Thread
 from dotenv import load_dotenv
+import subprocess
 
 # Has to be run from sudo
 
@@ -137,7 +139,7 @@ class Metasploit(object):
                                    universal_newlines = True, \
                                    shell=True,                \
                                    bufsize=0)
-        time.sleep(8)
+        time.sleep(10)
 
         cmd = "load msgrpc"
         cmd += " ServerHost=" + MSF_SERVER
@@ -159,8 +161,9 @@ class Metasploit(object):
         """
         # stop polling service
         self.polling = False
+        time.sleep(1)
         # exit msfconsole
-        self.process.stdin.write("exit \n")
+        self.process.stdin.write("\n exit \n")
         self.process.stdin.flush()
         self.process.stdin.close()
         self.process.terminate()

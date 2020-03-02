@@ -76,6 +76,7 @@ class MsfClient(object):
         #
         self.uri = kwargs.get('uri', '/api/')
         self.headers = {"Content-type": "binary/message-pack"}
+        self.connection = None
         self.consoles = {} # dict of consoles {cid: MsfConsole Object}
         self.token = None
 
@@ -115,12 +116,26 @@ class MsfClient(object):
             r = requests.post(url, data=payload,            \
                                    headers=self.headers,    \
                                    verify=False,            \
-                                   timeout=5.0)
+                                   stream=False,            \
+                                   timeout=10.0)
         except Exception as e:
             raise Exception(e)
 
         opts[:] = []  # Clear opts list
         return convert(decode(r.content))  # convert all keys/vals to utf8
+
+    def close_connection(self):
+        if self.ssl is True:
+            url = "https://%s:%s%s" % (self.host, self.port, self.uri)
+        else:
+            url = "http://%s:%s%s" % (self.host, self.port, self.uri)
+
+        try:
+            r = requests.post(url, headers={'Connection':'close'},    \
+                                   verify=False,                      \
+                                   timeout=10.0)
+        except Exception as e:
+            raise Exception(e)
 
     def add_perm_token(self):
         """
@@ -187,7 +202,12 @@ class MsfConsole(Cmd):
         """
         self.polling = True
         while self.polling:
-            msf_reply = self.write_read()
+            try:
+                msf_reply = self.write_read()
+            except Exception as e:
+                print('[!] Error: msfrpc polling failed, ', e)
+                self.polling = False
+                return
             if 'data' in msf_reply.keys() and len(msf_reply['data']) > 0:
                 print("[!] unexpected console data:")
                 self.display(str(msf_reply))
@@ -252,7 +272,7 @@ class MsfConsole(Cmd):
         str = str.replace('\x02', '')
         str = str.replace('[*]', '[m]')
         str = str.rstrip()
-        print(str +'\n')
+        print(str)
 
     def default(self, cmd):
         """
@@ -301,6 +321,9 @@ class MsfConsole(Cmd):
         Destroy the console.
         """
         self.client.msf_callback(MsfRpcMethod.ConsoleDestroy, [self.cid])
+
+    def stop_polling(self):
+        self.polling = False
 
     def do_exit(self, cmd):
         """

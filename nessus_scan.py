@@ -126,7 +126,7 @@ class NessusScan(object):
                                        shell=True,                \
                                        bufsize=0)
             process.wait()
-            print("[+] local copy: dir: /nessus_scans_tmp \n")
+            print("[+] local copy: dir: /nessus_scans_tmp")
             return True
         else:
             print("[!] error updating model")
