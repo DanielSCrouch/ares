@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 from initial_setup import Setup, INTRO
 from nessus_scan import NessusScan
 from msf_commands import MsfCommands
+from commands import Commands
 
 ################################################################################
 # Envionment variable imports (API Keys etc)
@@ -35,6 +36,10 @@ class Console(Cmd):
     msfconsole = None
     nessus = None
     targets = '10.91.251.173'
+
+    ############################################
+    # Initial Setup
+    ############################################
 
     def do_s(self, cmd):
         """
@@ -93,6 +98,10 @@ class Console(Cmd):
             services = ([s for s in services if s.startswith(text)])
         return services
 
+    ############################################
+    # Metasploit console
+    ############################################
+
     def do_msf(self, cmd):
         """
         Open msf console service.
@@ -104,98 +113,24 @@ class Console(Cmd):
             msf.prompt = 'msf' + self.prompt
             msf.cmdloop()
 
-    def do_target(self, cmd):
+    ############################################
+    # set target(s)
+    ############################################
+
+    def do_set(self, cmd):
         """
         Set target IP range.
         """
         cmds = cmd.split()
-        if len(cmds) != 1:
+        if len(cmds) != 2:
             print("*** invalid arguments, see 'help scan'")
             return
-        else:
-            self.targets = cmd
+        method = cmds[0]
+        attr = cmds[1]
+        if 'target' in method:
+            self.targets = attr
 
-    ############################################
-
-    def do_scan(self, cmd):
-        cmds = cmd.split()
-        # Command validation
-        scan_policies = MsfCommands(self.msfconsole).scan_policies()
-        if len(cmds) == 1 and cmds[0] not in ['policies']:
-            print("*** invalid arguments, see 'help scan'")
-            return
-        if len(cmds) == 2 and cmds[0] not in ['run']:
-            print("*** invalid arguments, see 'help scan'")
-            return
-        if len(cmds) == 2 and cmds[1] not in scan_policies.keys():
-            print("*** invalid scan name, see 'scan policies'")
-            return
-        if len(cmds) == 2 and self.targets is None:
-            print("*** no target selected, see 'help target'")
-            return
-        # Command execution
-        if cmds[0] == 'policies':
-            print("[*] scan policies avaliable: \n")
-            for policy_name in scan_policies.keys():
-                print("       " + policy_name)
-                print("       " + scan_policies[policy_name])
-        if cmds[0] == 'run':
-            scan_policy_name = cmds[1]
-            #
-            uuid = scan_policies[scan_policy_name]
-            scan_name = scan_policy_name.replace("Policy", "Scan")
-            targets = self.targets
-            msfconsole = self.msfconsole
-            scan = NessusScan(uuid, scan_name, targets, msfconsole)
-            scan.start_scan()
-            print("[*] Updating model")
-            try:
-                self.model.update(scan_name)
-            except Exception as e:
-                print("Error: ", e)
-
-
-    def complete_scan(self, text, line, begidx, endidx):
-        options = ['policies', 'run']
-        if text:
-            scan_opts = ([o for o in options if o.startswith(text)])
-        return scan_opts
-
-
-    def do_model(self, cmd):
-        """
-        Import scans and database entries into model.
-        """
-        cmds = cmd.split()
-        if self.model == None:
-            print("[!] Model service has not been setup, see 'help setup'")
-        elif len(cmds) != 1:
-            print("*** invalid number of arguments")
-            return
-        elif cmds[0] not in self.scans.keys():
-            print("*** invalid import option, see 'help import'")
-            return
-        else:
-            path = self.scans[cmds[0]]
-            try:
-                self.Model.populate(path)
-            except Exception as e:
-                print('[!] Error10: ', e)
-                return
-            print("[+] scan loaded into model")
-            return
-
-    def complete_model(self, text, line, begidx, endidx):
-        if not text:
-            try:
-                scans = list(self.scans.keys())
-            except Exception as e:
-                print(e)
-        else:
-            scans = ([s for s in self.scans.keys() if s.startswith(text)])
-        return scans
-
-    def do_show_targets(self, cmd):
+    def do_targets(self, cmd):
         """
         Display targets imported to model from scans.
         """
@@ -207,7 +142,7 @@ class Console(Cmd):
             for target in targets:
                 print("        ", target)
 
-    def do_show_target(self, cmd):
+    def do_target(self, cmd):
         """
         Display the targets data.
         """
@@ -222,11 +157,96 @@ class Console(Cmd):
             print("[*] target identified:")
             print(target)
 
-    def default(self, cmd):
-        if cmd == 'q':
-            return self.do_exit(cmd)
+    ############################################
+    # Scanning
+    ############################################
+
+    def do_scan(self, cmd):
+        cmds = cmd.split()
+        # Command validation
+        if len(cmds) == 1 and cmds[0] not in ['policies', 'names']:
+            print("*** invalid arguments, see 'help scan'")
+            return
+        if len(cmds) == 2 and cmds[0] not in ['run']:
+            print("*** invalid arguments, see 'help scan'")
+            return
+        if len(cmds) == 2 and self.targets is None:
+            print("*** no target selected, see 'help target'")
+            return
+        # Command execution
+        if cmds[0] == 'policies':
+            scan_policies = MsfCommands(self.msfconsole).scan_policies()
+            print("[*] scan policies avaliable: \n")
+            for policy_name in scan_policies.keys():
+                print("       " + policy_name)
+                print("       " + scan_policies[policy_name])
+        if cmds[0] == 'names':
+            scan_names = Commands().get_scan_names()
+            if scan_names:
+                print("[*] scans avaliable: \n")
+                for scan_name in scan_names:
+                    print("       " + scan_name)
+            else:
+                print("[!] no scans found")
+        if cmds[0] == 'run':
+            scan_policy_name = cmds[1]
+            #
+            scan_policies = MsfCommands(self.msfconsole).scan_policies()
+            uuid = scan_policies[scan_policy_name]
+            scan_name = scan_policy_name.replace("Policy", "Scan")
+            targets = self.targets
+            msfconsole = self.msfconsole
+            scan = NessusScan(uuid, scan_name, targets, msfconsole)
+            scan.start_scan()
+            print("[*] Updating model")
+            try:
+                self.model.import_scan(scan_name)
+            except Exception as e:
+                print("Error: ", e)
+
+
+    def complete_scan(self, text, line, begidx, endidx):
+        options = ['policies', 'run']
+        if text:
+            scan_opts = ([o for o in options if o.startswith(text)])
+        return scan_opts
+
+    ############################################
+    # Modelling
+    ############################################
+
+    def do_model(self, cmd):
+        cmds = cmd.split()
+        # Command validation
+        if len(cmds) != 2:
+            print("*** invalid number of arguments, see 'help scan'")
+            return
+        method = cmds[0]
+        attr = cmds[1]
+        # Command execution
+        if 'import' in method:
+            try:
+                self.model.import_scan(attr)
+                print("[*] import to model complete")
+            except Exception as e:
+                print("Error: ", e)
+
+    def complete_model(self, text, line, begidx, endidx):
+        if not text:
+            try:
+                scans = list(self.scans.keys())
+            except Exception as e:
+                print(e)
         else:
-            print("*** Unknown Command, see 'help'")
+            scans = ([s for s in self.scans.keys() if s.startswith(text)])
+        return scans
+
+
+
+
+    ############################################
+    # generic console commands
+    ############################################
 
     def do_shell(self, cmd):
         """
@@ -235,6 +255,24 @@ class Console(Cmd):
         print("[+] Running a shell command")
         output = os.popen(cmd).read()
         print(output)
+
+    def default(self, cmd):
+        if cmd == 'q':
+            return self.do_exit(cmd)
+        else:
+            print("*** Unknown Command, see 'help'")
+
+    def precmd(self, cmd):
+        return Cmd.precmd(self, cmd)
+
+    def postcmd(self, stop, line):
+        print('\n')
+        if stop:
+            return True
+
+    ############################################
+    # exit process
+    ############################################
 
     def do_exit(self, cmd):
         """
@@ -256,20 +294,11 @@ class Console(Cmd):
         except Exception as e:
             print("Error: ", e)
         print("[+] Closing application.")
-
         return True
 
     do_EOF = do_exit # assign end-of-line to exit
 
     ##################################################
-
-    def precmd(self, cmd):
-        return Cmd.precmd(self, cmd)
-
-    def postcmd(self, stop, line):
-        print('\n')
-        if stop:
-            return True
 
     # def do_input(self, s):
     #     if s=='':

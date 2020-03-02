@@ -43,7 +43,7 @@ class Model(object):
         if host in self.targets.keys():
             return self.targets[host]
 
-    def update(self, scan_name, csv_dir=SCAN_REPORT_DIR):
+    def import_scan(self, scan_name, csv_dir=SCAN_REPORT_DIR):
         """
         Update data with Targets, Services and Vulnerabilities.
         """
@@ -52,7 +52,6 @@ class Model(object):
             csv_path = glob.glob(path)
             csv_path = csv_path[0]
         except Exception as e:
-            print(csv_)
             print("[!] Error: ", e)
             return
 
