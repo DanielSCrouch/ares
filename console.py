@@ -18,18 +18,6 @@ from msf_commands import MsfCommands
 ################################################################################
 
 load_dotenv()
-NESSUS_USERNAME = os.getenv('NESSUS_USERNAME')
-NESSUS_PASSWORD = os.getenv('NESSUS_PASSWORD')
-NESSUS_HOST = os.getenv('NESSUS_HOST')
-NESSUS_PORT = os.getenv('NESSUS_PORT')
-POSTGRES_USER = os.getenv('POSTGRES_USER')
-POSTGRES_PASSWORD = os.getenv('POSTGRES_PASSWORD')
-POSTGRES_SERVER = os.getenv('POSTGRES_SERVER')
-POSTGRES_PORT = os.getenv('POSTGRES_PORT')
-POSTGRES_DB_NAME = os.getenv('POSTGRES_DB_NAME')
-SCAN_NAME = os.getenv('SCAN_NAME')
-SCAN_UUID = os.getenv('SCAN_UUID')
-SCAN_DESCRIPTION = os.getenv('SCAN_DESCRIPTION')
 TARGETS = os.getenv('TARGETS')
 
 ################################################################################
@@ -77,6 +65,9 @@ class Console(Cmd):
         # Nessus
         if self.nessus is None:
             self.nessus = Setup().nessus()
+        # Model
+        if self.model is None:
+            self.model = Setup().model()
         # Planner
         if self.planner is None:
             planner = Setup().planner()
@@ -157,6 +148,12 @@ class Console(Cmd):
             msfconsole = self.msfconsole
             scan = NessusScan(uuid, scan_name, targets, msfconsole)
             scan.start_scan()
+            print("[*] Updating model")
+            try:
+                self.model.update(scan_name)
+            except Exception as e:
+                print("Error: ", e)
+
 
     def complete_scan(self, text, line, begidx, endidx):
         options = ['policies', 'run']

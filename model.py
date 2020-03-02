@@ -15,8 +15,6 @@ import installed_service_identifier
 
 load_dotenv()
 SCAN_REPORT_DIR = os.getenv('SCAN_REPORT_DIR')
-SCAN_NAME = os.getenv('SCAN_NAME')
-CSV_PATH = glob.glob(SCAN_REPORT_DIR + SCAN_NAME + '.csv')[0]
 
 ################################################################################
 # Model Object built from Nessus scans and Metasploit's Postgres Database
@@ -45,11 +43,18 @@ class Model(object):
         if host in self.targets.keys():
             return self.targets[host]
 
-    def populate(self, csv_path=CSV_PATH):
+    def update(self, scan_name, csv_dir=SCAN_REPORT_DIR):
         """
-        Populate data with Targets, Services and Vulnerabilities.
-        Controls csv read flow.
+        Update data with Targets, Services and Vulnerabilities.
         """
+        path = "nessus_scans_tmp/" + scan_name + '*.csv'
+        try:
+            csv_path = glob.glob(path)
+            csv_path = csv_path[0]
+        except Exception as e:
+            print(csv_)
+            print("[!] Error: ", e)
+            return
 
         with open(csv_path, newline='') as csvfile:
             reader = csv.DictReader(csvfile)

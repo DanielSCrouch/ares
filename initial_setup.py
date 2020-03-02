@@ -90,6 +90,18 @@ class Setup(object):
 
     # Services
 
+    def model(self):
+        """
+        Initialise and return Model class object.
+        """
+        try:
+            print("[*] loading Model")
+            model = Model()
+            print("[+] Model service loaded")
+        except Exception as e:
+            print('[!] Error3: ', e)
+        return model
+        
     def planner(self):
         """
         Initialise and return AI Planner.

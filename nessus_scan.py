@@ -2,8 +2,20 @@
 # Extension of console.py module
 # Provides scan function, enabling nessus scans through an msfrpc console
 
+
+import os
 import re
 import time
+import subprocess
+from dotenv import load_dotenv
+
+################################################################################
+# Envionment imports (Set msf server login details)
+################################################################################
+
+load_dotenv()
+NESSUS_DEF_PATH = os.getenv('NESSUS_DEF_PATH')
+SCAN_REPORT_DIR = os.getenv('SCAN_REPORT_DIR')
 
 class NessusScan(object):
 
@@ -108,6 +120,13 @@ class NessusScan(object):
         msf_reply = self.msfconsole.callback(cmd, verbose=False)
         if 'export is ready' in msf_reply:
             print("[+] export complete: dir: /opt/nessus/var/nessus/users/ares/files")
+            command = "cp -r " + NESSUS_DEF_PATH + " " + SCAN_REPORT_DIR
+            process = subprocess.Popen(command, \
+                                       universal_newlines = True, \
+                                       shell=True,                \
+                                       bufsize=0)
+            process.wait()
+            print("[+] local copy: dir: /nessus_scans_tmp \n")
             return True
         else:
             print("[!] error updating model")
