@@ -2,7 +2,7 @@
 (:requirements :typing)
 (:types rover waypoint store camera mode lander objective)
 
-(:predicates (at ?x - rover ?y - waypoint) 
+(:predicates (at ?x - rover ?y - waypoint)
              (at_lander ?x - lander ?y - waypoint)
              (can_traverse ?r - rover ?x - waypoint ?y - waypoint)
 	     (equipped_for_soil_analysis ?r - rover)
@@ -12,7 +12,7 @@
              (have_rock_analysis ?r - rover ?w - waypoint)
              (have_soil_analysis ?r - rover ?w - waypoint)
              (full ?s - store)
-	     (calibrated ?c - camera ?r - rover) 
+	     (calibrated ?c - camera ?r - rover)
 	     (supports ?c - camera ?m - mode)
              (available ?r - rover)
              (visible ?w - waypoint ?p - waypoint)
@@ -30,10 +30,10 @@
 
 )
 
-	
+
 (:action navigate
-:parameters (?x - rover ?y - waypoint ?z - waypoint) 
-:precondition (and (can_traverse ?x ?y ?z) (available ?x) (at ?x ?y) 
+:parameters (?x - rover ?y - waypoint ?z - waypoint)
+:precondition (and (can_traverse ?x ?y ?z) (available ?x) (at ?x ?y)
                 (visible ?y ?z)
 	    )
 :effect (and (not (at ?x ?y)) (at ?x ?z)
@@ -68,7 +68,7 @@
  :parameters (?r - rover ?i - camera ?t - objective ?w - waypoint)
  :precondition (and (equipped_for_imaging ?r) (calibration_target ?i ?t) (at ?r ?w) (visible_from ?t ?w)(on_board ?i ?r)
 		)
- :effect (calibrated ?i ?r) 
+ :effect (calibrated ?i ?r)
 )
 
 
@@ -90,7 +90,7 @@
 
 (:action communicate_soil_data
  :parameters (?r - rover ?l - lander ?p - waypoint ?x - waypoint ?y - waypoint)
- :precondition (and (at ?r ?x)(at_lander ?l ?y)(have_soil_analysis ?r ?p) 
+ :precondition (and (at ?r ?x)(at_lander ?l ?y)(have_soil_analysis ?r ?p)
                    (visible ?x ?y)(available ?r)(channel_free ?l)
             )
  :effect (and (not (available ?r))(not (channel_free ?l))(channel_free ?l)
