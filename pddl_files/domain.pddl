@@ -16,7 +16,7 @@
 						 (has_os          ?x - os 		?y - host)
 						 (has_vuln        ?x - vuln 	?y - host)
 						 (has_failed	    ?x - vuln)
-						 (has_progress		?x - target)
+						 (has_progress1		?x - target)
 						 (has_progress2   ?x - target)
 						 )
 
@@ -26,7 +26,7 @@
 :precondition (and (not (found ?x)) (not (host_scanned ?x)))
 :effect (and (found ?x)
 								 			(host_scanned ?x)
-								 			(has_progress ?x)))
+								 			(has_progress1 ?x)))
 
  (:action full_scan
  	:parameters   		(?x - host)

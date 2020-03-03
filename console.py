@@ -137,7 +137,7 @@ class Console(Cmd):
         if self.model is None:
             print("[!] Model service has not been setup, see 'help setup'")
         else:
-            targets = self.model.get_targets()
+            targets = self.model.get_target_names()
             print("[*] target hosts identified: \n")
             for target in targets:
                 print("        ", target)
@@ -152,8 +152,8 @@ class Console(Cmd):
         elif len(cmds) != 1:
             print("*** invalid number of arguments")
             return
-        elif cmds[0] in self.model.get_targets():
-            target = self.model.get_target(cmds[0])
+        elif cmds[0] in self.model.get_target_names():
+            target = self.model.get_target_name(cmds[0])
             print("[*] target identified:")
             print(target)
 
@@ -192,7 +192,11 @@ class Console(Cmd):
             scan_policy_name = cmds[1]
             #
             scan_policies = MsfCommands(self.msfconsole).scan_policies()
-            uuid = scan_policies[scan_policy_name]
+            try:
+                uuid = scan_policies[scan_policy_name]
+            except:
+                print("[!] no matching policy name")
+                return
             scan_name = scan_policy_name.replace("Policy", "Scan")
             targets = self.targets
             msfconsole = self.msfconsole

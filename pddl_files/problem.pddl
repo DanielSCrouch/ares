@@ -1,18 +1,18 @@
 (define (problem attackvector) (:domain attacksurface)
+
 (:objects
-	host1 - host
-	host2 - host
-	vuln1 - vuln
-	os1 	- os
-	port1 - port
-	)
+    placeholder - host
+    xx10_91_251_173 - host
+    placeholder - vuln
+    placeholder - os
+    placeholder - port
+    )
 
-(:init
-	(is host1)
+(:init(is placeholder)
+    )
+
+(:goal
+    (has_progress1 xx10_91_251_173)
+    )
+
 )
-
-(:goal (or
-		(has_progress2 host1)
-		(has_progress2 host2)
-	)
-))

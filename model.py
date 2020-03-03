@@ -1,6 +1,7 @@
 import os
 import csv
 import glob
+from pathlib import Path
 from dotenv import load_dotenv
 #
 import service_identifier
@@ -28,18 +29,36 @@ class Model(object):
         self.vulns = []
         self.installed_services = []
 
-    def get_targets(self):
+    def get_target_names(self):
         """
-        Return list of targets.
+        Return list of targets names.
         """
         return self.targets.keys()
 
+    def get_targets(self):
+        """
+        Return a list of targets
+        """
+        return self.targets.values()
+
     def get_target(self, host):
+        """
+        Return target
+        """
+        return self.targets[host]
+
+    def get_target_name(self, host):
         """
         Return the target specificed by the host IP address.
         """
         if host in self.targets.keys():
             return self.targets[host]
+
+    def get_vuln_names(self):
+        """
+        Return list of vulnerability names.
+        """
+        return self.vulns
 
     def import_scan(self, scan_name, csv_dir=SCAN_REPORT_DIR):
         """
@@ -106,6 +125,86 @@ class Model(object):
                     self.installed_services = is_list
                     self.targets[host].os = is_list
 
+    def generate_problem(self, depth=0):
+        """
+        Generates a PDDL problem file for use with planner.
+        - optional arguments:
+        depth: determines how many progress steps required to achieve goal
+        """
+        # path = glob.glob("/problem_test.txt")
+        cwd = Path.cwd()
+        problem_file = Path.cwd() / 'pddl_files' / 'problem.pddl'
+        problem = PDDLTranslate(self).get_header()
+        problem += PDDLTranslate(self).get_objects()
+        problem += PDDLTranslate(self).get_init(depth)
+        problem += PDDLTranslate(self).get_goals(depth)
+        problem += '\n\n)'
+        problem_file.write_text(problem)
+        print('Done!')
+
+
+class PDDLTranslate(object):
+    """
+    Defines a collection of methods for translating models to PDDL problems
+    """
+    def __init__(self, model):
+        self.model = model
+
+    def get_header(self):
+        p = "(define (problem attackvector) (:domain attacksurface)"
+        return p
+
+    def get_objects(self):
+        p = "\n\n(:objects"
+        # add hosts
+        p += "\n    placeholder - host"
+        for target_name in self.model.get_target_names():
+            target_name = self.get_legal(target_name)
+            p += "\n    " + target_name + " - host"
+        # add vulns
+        p += "\n    placeholder - vuln"
+        for vuln_name in self.model.get_vuln_names():
+            vuln_name = self.get_legal(vuln_name)
+            p += "\n    " + vuln_name + " - vuln"
+        # add os
+        p += "\n    placeholder - os"
+        # port
+        p += "\n    placeholder - port"
+        # end
+        p += "\n    )"
+        return p
+
+    def get_init(self, depth):
+        p = "\n\n(:init"
+        p += "(is placeholder)"
+        for target in self.model.get_targets():
+            target_name = self.get_legal(target.host)
+            # add found targets
+            if target.found:
+                p += "\n    (found " + target_name + ")"
+        p += "\n    )"
+        return p
+
+    def get_goals(self, depth):
+        p = "\n\n(:goal"
+        if len(self.model.get_target_names()) > 1:
+            p += " (or"
+            for target_name in self.model.get_target_names():
+                target_name = self.get_legal(target_name)
+                p += "\n    (has_progress" + str(depth) + " " + target_name + ")"
+            p += "\n    "
+        else:
+            for target_name in self.model.get_target_names():
+                target_name = self.get_legal(target_name)
+                p += "\n    (has_progress" + str(depth) + " " + target_name + ")"
+        p += "\n    )"
+        return p
+
+    def get_legal(self, name):
+        if name[0].isdigit():
+            name = 'xx' + name
+        name = name.replace('.', '_')
+        return name
 
 ################################################################################
 # Host targets identified
@@ -117,6 +216,7 @@ class Target(object):
     """
     def __init__(self, host):
         self.host = host
+        self.found = False
         self.tcp_ports = []
         self.udp_ports = []
         self.services = []
@@ -212,7 +312,8 @@ class Vuln(object):
 # Test
 ################################################################################
 
-# scandb = ScanDB()
-# for target in scandb.targets.values():
-#     print(target)
-#     break
+model = Model()
+model.import_scan('Host_Discover_Scan')
+for target in model.get_targets():
+    print(target)
+model.generate_problem(1)

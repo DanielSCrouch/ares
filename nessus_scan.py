@@ -64,11 +64,15 @@ class NessusScan(object):
             return
         # retrieve scan id
         regex = "nessus_scan_launch (\d+)"
+        print('here: ', msf_reply)
         m = re.search(regex, msf_reply, re.IGNORECASE)
-        self.scanid = m.group(1)
-        i = int(self.scanid) # check value is integer
-        print("[*] scan created with ID: ", self.scanid)
-        return True
+        try:
+            self.scanid = m.group(1)
+            i = int(self.scanid) # check value is integer
+            print("[*] scan created with ID: ", self.scanid)
+            return True
+        except Exception as e:
+            print("Error: ",e )
 
     def launch_scan(self):
         """

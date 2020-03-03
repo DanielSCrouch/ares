@@ -1,12 +1,32 @@
-(Drive truck0 distributor1 distributor0)
-(Lift hoist0 crate1 pallet0 depot0)
-(Drive truck0 distributor0 distributor1)
-(Load hoist0 crate1 truck1 depot0)
-(Drive truck1 depot0 distributor0)
-(Lift hoist1 crate0 pallet1 distributor0)
-(Load hoist1 crate0 truck1 distributor0)
-(Unload hoist1 crate1 truck1 distributor0)
-(Drop hoist1 crate1 pallet1 distributor0)
-(Drive truck1 distributor0 distributor1)
-(Unload hoist2 crate0 truck1 distributor1)
-(Drop hoist2 crate0 pallet2 distributor1)
+
+ff: parsing domain file
+domain 'ATTACKSURFACE' defined
+ ... done.
+ff: parsing problem file
+problem 'ATTACKVECTOR' defined
+ ... done.
+
+
+no metric specified. plan length assumed.
+
+checking for cyclic := effects --- OK.
+
+ff: search configuration is EHC, if that fails then  best-first on 1*g(s) + 5*h(s) where
+    metric is  plan length
+
+Cueing down from goal distance:    1 into depth [1]
+                                   0            
+
+ff: found legal plan as follows
+
+step    0: HOST_SCAN XX10_91_251_173
+     
+
+time spent:    0.00 seconds instantiating 4 easy, 0 hard action templates
+               0.00 seconds reachability analysis, yielding 16 facts and 4 actions
+               0.00 seconds creating final representation with 16 relevant facts, 0 relevant fluents
+               0.00 seconds computing LNF
+               0.00 seconds building connectivity graph
+               0.00 seconds searching, evaluating 2 states, to a max depth of 1
+               0.00 seconds total time
+
