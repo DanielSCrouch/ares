@@ -4,9 +4,9 @@ import glob
 from pathlib import Path
 from dotenv import load_dotenv
 #
-import service_identifier
-import os_identifier
-import installed_service_identifier
+from . import service_identifier
+from . import os_identifier
+from . import installed_service_identifier
 
 ################################################################################
 # Envionment imports (Nessus scan report CSV location)
@@ -21,38 +21,38 @@ SCAN_REPORT_DIR = os.getenv('SCAN_REPORT_DIR')
 
 class Model(object):
     """
-    A Model of known Targets and their attributes.
+    A Model of known Hosts and their attributes.
     """
     def __init__(self):
-        self.targets = {}
+        self.hosts = {}
         self.services = []
         self.vulns = []
         self.installed_services = []
 
-    def get_target_names(self):
+    def get_host_names(self):
         """
-        Return list of targets names.
+        Return list of hosts names.
         """
-        return self.targets.keys()
+        return self.hosts.keys()
 
-    def get_targets(self):
+    def get_hosts(self):
         """
-        Return a list of targets
+        Return a list of hosts
         """
-        return self.targets.values()
+        return self.hosts.values()
 
-    def get_target(self, host):
+    def get_host(self, host):
         """
-        Return target
+        Return host
         """
-        return self.targets[host]
+        return self.hosts[host]
 
-    def get_target_name(self, host):
+    def get_host_name(self, host):
         """
-        Return the target specificed by the host IP address.
+        Return the host specificed by the host IP address.
         """
-        if host in self.targets.keys():
-            return self.targets[host]
+        if host in self.hosts.keys():
+            return self.hosts[host]
 
     def get_vuln_names(self):
         """
@@ -62,7 +62,7 @@ class Model(object):
 
     def import_scan(self, scan_name, csv_dir=SCAN_REPORT_DIR):
         """
-        Update data with Targets, Services and Vulnerabilities.
+        Update data with Hosts, Services and Vulnerabilities.
         """
         path = "nessus_scans_tmp/" + scan_name + '*.csv'
         try:
@@ -87,43 +87,43 @@ class Model(object):
                 plugin_out = row['Plugin Output']
 
                 # add new hosts
-                if host not in self.targets.keys():
-                    self.targets[host] = Target(host)
+                if host not in self.hosts.keys():
+                    self.hosts[host] = Host(host)
 
                 # identify and add open tcp ports
                 if protocol == 'tcp' and port != '0':
-                    if port not in self.targets[host].tcp_ports:
-                        self.targets[host].tcp_ports.append(port)
+                    if port not in self.hosts[host].tcp_ports:
+                        self.hosts[host].tcp_ports.append(port)
 
                 # identify and add open tcp ports
                 if protocol == 'udp' and port != '0':
-                    if port not in self.targets[host].udp_ports:
-                        self.targets[host].udp_ports.append(port)
+                    if port not in self.hosts[host].udp_ports:
+                        self.hosts[host].udp_ports.append(port)
 
                 # identify and add services
                 service_name = service_identifier.get_service(plugin)
                 if service_name is not None:
                     s = Service(plugin, service_name, protocol, port)
                     self.services.append(s)
-                    self.targets[host].services.append(s)
+                    self.hosts[host].services.append(s)
 
                 # identify and add vulnerabilities
                 if len(cve_id) > 3:
                     v = Vuln(plugin, cve_id, cvss, protocol, port)
                     self.vulns.append(v)
-                    self.targets[host].vulns.append(v)
+                    self.hosts[host].vulns.append(v)
 
                 # identify and add OS
                 if plugin == "11936":
                     os_list = os_identifier.get_os(plugin_out)
-                    self.targets[host].os = os_list
+                    self.hosts[host].os = os_list
 
                 # identify and add installed services (credential access)
                 if plugin == "20811":
                     print('here')
                     is_list = installed_service_identifier.get_service(plugin_out)
                     self.installed_services = is_list
-                    self.targets[host].os = is_list
+                    self.hosts[host].os = is_list
 
     def generate_problem(self, depth=0):
         """
@@ -158,9 +158,9 @@ class PDDLTranslate(object):
         p = "\n\n(:objects"
         # add hosts
         p += "\n    placeholder - host"
-        for target_name in self.model.get_target_names():
-            target_name = self.get_legal(target_name)
-            p += "\n    " + target_name + " - host"
+        for host_name in self.model.get_host_names():
+            host_name = self.get_legal(host_name)
+            p += "\n    " + host_name + " - host"
         # add vulns
         p += "\n    placeholder - vuln"
         for vuln_name in self.model.get_vuln_names():
@@ -177,26 +177,26 @@ class PDDLTranslate(object):
     def get_init(self, depth):
         p = "\n\n(:init"
         p += "(is placeholder)"
-        for target in self.model.get_targets():
-            target_name = self.get_legal(target.host)
-            # add found targets
-            if target.found:
-                p += "\n    (found " + target_name + ")"
+        for host in self.model.get_hosts():
+            host_name = self.get_legal(host.host)
+            # add found hosts
+            if host.found:
+                p += "\n    (found " + host_name + ")"
         p += "\n    )"
         return p
 
     def get_goals(self, depth):
         p = "\n\n(:goal"
-        if len(self.model.get_target_names()) > 1:
+        if len(self.model.get_host_names()) > 1:
             p += " (or"
-            for target_name in self.model.get_target_names():
-                target_name = self.get_legal(target_name)
-                p += "\n    (has_progress" + str(depth) + " " + target_name + ")"
+            for host_name in self.model.get_host_names():
+                host_name = self.get_legal(host_name)
+                p += "\n    (has_progress" + str(depth) + " " + host_name + ")"
             p += "\n    "
         else:
-            for target_name in self.model.get_target_names():
-                target_name = self.get_legal(target_name)
-                p += "\n    (has_progress" + str(depth) + " " + target_name + ")"
+            for host_name in self.model.get_host_names():
+                host_name = self.get_legal(host_name)
+                p += "\n    (has_progress" + str(depth) + " " + host_name + ")"
         p += "\n    )"
         return p
 
@@ -207,12 +207,12 @@ class PDDLTranslate(object):
         return name
 
 ################################################################################
-# Host targets identified
+# Host identified
 ################################################################################
 
-class Target(object):
+class Host(object):
     """
-    A target host identified from Nessus Scanning.
+    A Host host identified from Nessus Scanning.
     """
     def __init__(self, host):
         self.host = host
@@ -312,8 +312,8 @@ class Vuln(object):
 # Test
 ################################################################################
 
-model = Model()
-model.import_scan('Host_Discover_Scan')
-for target in model.get_targets():
-    print(target)
-model.generate_problem(1)
+# model = Model()
+# model.import_scan('Host_Discover_Scan')
+# for host in model.get_hosts():
+#     print(host)
+# model.generate_problem(1)
