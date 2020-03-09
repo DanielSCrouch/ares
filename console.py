@@ -4,40 +4,10 @@ import re
 import time
 import traceback
 from cmd import Cmd
-from dotenv import load_dotenv
 
-################################################################################
-# Local import
-################################################################################
-
-from plugins.postgresql import PostgreSQL
-from plugins.metasploit import Metasploit
-from plugins.nessus import Nessus
-
-from msfrpc.client import MsfClient
-from msfrpc.console import MsfConsole
-from msfrpc.commands import MsfCommands
-
-from modelling.model import Model
-
-from planning.planner import Planner
-
-################################################################################
-# Global variables
-################################################################################
-
-# Plugin processes
-DATABASE = PostgreSQL()
-METASPLOIT = Metasploit()
-NESSUS = Nessus()
-# Native objects
-MODEL = Model()
-PLANNER = Planner()
-MSFCLIENT = MsfClient()
-MSFCONSOLE = MsfConsole()
-MSFCOMMANDS = MsfCommands()
-# Variables
-TARGET = None
+# local imports
+import config
+from modelling.target import Target
 
 ################################################################################
 # Main ARES Console
@@ -47,6 +17,7 @@ class Console(Cmd):
     prompt = ">>> "
     with open('misc/intro.txt', 'r') as f:
         intro = f.read()
+
 
     ############################################
     # Initial Setup
@@ -64,31 +35,31 @@ class Console(Cmd):
         # command execution
         try:
             print("[*] loading PostgreSQL plugin")
-            DATABASE.start_service()
+            config.DATABASE.start_service()
             print("[*] PostgreSQL database now avaliable")
             print("[*] loading Metasploit plugin")
-            METASPLOIT.start_service()
+            config.METASPLOIT.start_service()
             print("[*] Metasploit now avaliable")
             print("[*] loading Nessus plugin")
-            NESSUS.start_service()
+            config.NESSUS.start_service()
             print("[*] Nessus now avaliable")
             print("[*] logging into Metasploit via RPC")
-            MSFCLIENT.login()
+            config.MSFCLIENT.login()
             print("[*] Metasploit client login successfull")
             print("[*] connecting msf console to Metasploit client")
-            MSFCONSOLE.connect(MSFCLIENT)
+            config.MSFCONSOLE.connect(config.MSFCLIENT)
             print("[*] msf console now avaliable, see 'help msf'")
             print("[*] connecting msf commmand tool to msf console")
-            MSFCOMMANDS.connect(MSFCONSOLE)
+            config.MSFCOMMANDS.connect(config.MSFCONSOLE)
             print("[*] msf automated commands now avaliable")
             print("[*] connecting Metasploit to Nessus")
-            MSFCOMMANDS.connect_nessus()
+            config.MSFCOMMANDS.connect_nessus()
             print("[*] Nessus now avaliable to msf")
             print("[*] connecting Metasploit to database")
-            MSFCOMMANDS.connect_database()
+            config.MSFCOMMANDS.connect_database()
             print("[+] Metasploit connected to database")
             print("[+] setting up msf workspace")
-            MSFCOMMANDS.set_workspace('default')
+            config.MSFCOMMANDS.set_workspace('default')
             print("[*] setup complete")
         except Exception as e:
             handle(e)
@@ -101,26 +72,73 @@ class Console(Cmd):
         """
         Open msf console.
         """
+        # command validation
+        cmds = cmd.split()
+        if len(cmds) != 0:
+            print("*** invalid argument")
+            return
+        # command execution
         try:
-            MSFCONSOLE.prompt = 'msf' + self.prompt
-            MSFCONSOLE.cmdloop()
+            config.MSFCONSOLE.prompt = 'msf' + self.prompt
+            config.MSFCONSOLE.cmdloop()
         except Exception as e:
             handle(e)
 
     ############################################
-    # set target(s)
+    # add target
     ############################################
 
     def do_target(self, cmd):
         """
-        Set target IP range.
+        Set create a target as the specificed IP address.
         """
+        # command validation
         cmds = cmd.split()
-        if len(cmds) != 1:
-            print("*** invalid arguments, see 'help scan'")
+        if len(cmds) != 2:
+            print("*** invalid number of arguments, see 'target'")
             return
-        ip_range = cmds[0]
-        self.target = ip_range
+        if not config.COMMANDS.validip(cmds[1]):
+            print("*** invalid IP address")
+            return
+        target_name = cmds[0]
+        target_ip = cmds[1]
+        # command execution
+        config.TARGETS[target_name] = Target(target_ip)
+
+    ############################################
+    # Scan a target
+    ############################################
+
+    def do_scan(self, cmd):
+        """
+        Scan a targeted host.
+        Options:
+        - host, os, full
+        - target name
+        """
+        # command validation
+        cmds = cmd.split()
+        if len(cmds) != 2:
+            print("*** invalid number of arguments, see 'help scan'")
+            return
+        scan_type = cmds[0]
+        target_name = cmds[1]
+        if scan_type not in ['host', 'os', 'full']:
+            print("*** invalid scan name, see 'help scan'")
+        if target_name not in config.TARGETS.keys():
+            print("*** target not known")
+        # command execution
+        try:
+            config.COMMANDS.scan(target_name, scan_type)
+        except Exception as e:
+            handle(e)
+
+
+    def complete_scan(self, text, line, begidx, endidx):
+        options = ['host', 'os', 'full']
+        if text:
+            scan_opts = ([o for o in options if o.startswith(text)])
+        return scan_opts
 
     ############################################
     # set show
@@ -128,120 +146,26 @@ class Console(Cmd):
 
     def do_show(self, cmd):
         """
-        Display hosts.
-        Use 'all' for a list of all known hosts.
-        USe 'target' to see current target ip range
+        Display environment data.
+        - Options:
         """
+        # Command validation
         cmds = cmd.split()
-        if len(cmds) != 1:
-            print("*** invalid arguments, see 'help scan'")
+        if len(cmds) == 1 and cmds[0] not in ['policies', 'scans', 'targets']:
+            print("*** invalid arguments, see 'help show'")
             return
+        # Command execution
         try:
-            host_name = cmds[0]
-            if 'all' in host_name:
-                host_names = self.model.get_host_names()
-                print("[*] hosts identified: \n")
-                for host_name in host_names:
-                    print("        ", host_name)
-            elif 'target' in host_name:
-                print(self.target)
-            else:
-                host = self.model.get_host(host_name)
-                print(host)
+            if cmds[0] == 'policies':
+                config.MSFCOMMANDS.show_scan_policies()
+            if cmds[0] == 'scans':
+                config.COMMANDS.show_scan_names()
+            if cmds[0] == 'targets':
+                config.COMMANDS.show_targets()
+            if cmds[0] == 'target':
+                config.COMMANDS.show_target(cmds[1])
         except Exception as e:
-            print(e)
-
-    ############################################
-    # Scanning
-    ############################################
-
-    def do_scan(self, cmd):
-        cmds = cmd.split()
-        # Command validation
-        if len(cmds) == 1 and cmds[0] not in ['policies', 'names']:
-            print("*** invalid arguments, see 'help scan'")
-            return
-        if len(cmds) == 2 and cmds[0] not in ['run']:
-            print("*** invalid arguments, see 'help scan'")
-            return
-        if len(cmds) == 2 and self.targets is None:
-            print("*** no target selected, see 'help target'")
-            return
-        # Command execution
-        if cmds[0] == 'policies':
-            scan_policies = MsfCommands(self.msfconsole).scan_policies()
-            print("[*] scan policies avaliable: \n")
-            for policy_name in scan_policies.keys():
-                print("       " + policy_name)
-                print("       " + scan_policies[policy_name])
-        if cmds[0] == 'names':
-            scan_names = Commands().get_scan_names()
-            if scan_names:
-                print("[*] scans avaliable: \n")
-                for scan_name in scan_names:
-                    print("       " + scan_name)
-            else:
-                print("[!] no scans found")
-        if cmds[0] == 'run':
-            scan_policy_name = cmds[1]
-            #
-            scan_policies = MsfCommands(self.msfconsole).scan_policies()
-            try:
-                uuid = scan_policies[scan_policy_name]
-            except:
-                print("[!] no matching policy name")
-                return
-            scan_name = scan_policy_name.replace("Policy", "Scan")
-            targets = self.targets
-            msfconsole = self.msfconsole
-            scan = NessusScan(uuid, scan_name, targets, msfconsole)
-            scan.start_scan()
-            print("[*] Updating model")
-            try:
-                self.model.import_scan(scan_name)
-            except Exception as e:
-                print("Error: ", e)
-
-
-    def complete_scan(self, text, line, begidx, endidx):
-        options = ['policies', 'run']
-        if text:
-            scan_opts = ([o for o in options if o.startswith(text)])
-        return scan_opts
-
-    ############################################
-    # Modelling
-    ############################################
-
-    def do_model(self, cmd):
-        cmds = cmd.split()
-        # Command validation
-        if len(cmds) != 2:
-            print("*** invalid number of arguments, see 'help scan'")
-            return
-        method = cmds[0]
-        attr = cmds[1]
-        # Command execution
-        if 'import' in method:
-            try:
-                self.model.import_scan(attr)
-                print("[*] import to model complete")
-            except Exception as e:
-                print("Error: ", e)
-
-    def complete_model(self, text, line, begidx, endidx):
-        if not text:
-            try:
-                scans = list(self.scans.keys())
-            except Exception as e:
-                print(e)
-        else:
-            scans = ([s for s in self.scans.keys() if s.startswith(text)])
-        return scans
-
-    ############################################
-    # generic console commands
-    ############################################
+            handle(e)
 
     def do_shell(self, cmd):
         """
@@ -251,13 +175,21 @@ class Console(Cmd):
         output = os.popen(cmd).read()
         print(output)
 
+    ############################################
+    # generic console commands
+    ############################################
+
     def default(self, cmd):
         if cmd == 'q':
             return self.do_exit(cmd)
         if cmd == 's':
             self.do_setup(cmd)
         else:
-            print("*** Unknown Command, see 'help'")
+            try:
+                exec(cmd)
+            except Exception as e:
+                handle(e)
+        # print("*** Unknown Command, see 'help'")
 
     def precmd(self, cmd):
         return Cmd.precmd(self, cmd)
@@ -277,11 +209,11 @@ class Console(Cmd):
         """
         try:
             print("[*] stopping msfconsole")
-            MSFCONSOLE.stop_polling()
+            config.MSFCONSOLE.stop_polling()
             print("[*] closing msfclient connect")
-            MSFCLIENT.close_connection()
+            config.MSFCLIENT.close_connection()
             print("[*] closing metasploit sub-process")
-            METASPLOIT.stop_service()
+            config.METASPLOIT.stop_service()
         except Exception as e:
             print("Error: ", e)
         print("[+] Closing application.")

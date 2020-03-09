@@ -17,7 +17,6 @@ from cmd import Cmd
 
 from .exceptions import MsfRpcError
 from .methods import MsfRpcMethod
-from registrar import Registrar
 
 ################################################################################
 # Envionment imports (API Keys etc)
@@ -42,14 +41,9 @@ class MsfConsole(Cmd):
 
         Mandatory Arguments:
         - client : an msfrpc client object.
-
-        Optional Arguments:
-        - registrar : a registrar object
-        for keeping track of input, output pairs
         """
         super(MsfConsole, self).__init__()
         self.client = None
-        self.registrar = Registrar()
         self.cid = None
         self.msf_lock = Lock()
         self.polling = False
@@ -170,9 +164,6 @@ class MsfConsole(Cmd):
         - verbose: print to cmd by default, set to false to prevent print
         """
         msf_data = self.write_read(cmd)['data']
-        # record write and read with registrar
-        id = str(uuid.uuid4())
-        self.registrar.record(id, cmd, msf_data)
         # display reply
         if verbose:
             self.display(msf_data)

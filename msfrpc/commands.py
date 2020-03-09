@@ -3,13 +3,16 @@
 # Provides collection of automated msfconsole methods
 
 import os
+import re
+import time
+import subprocess
 from dotenv import load_dotenv
 
 ################################################################################
 # Local import
 ################################################################################
 
-from msf_nessus_parser import policy_list_parser
+
 
 ################################################################################
 # Envionment variable imports (API Keys etc)
@@ -26,6 +29,11 @@ POSTGRES_SERVER = os.getenv('POSTGRES_SERVER')
 POSTGRES_PORT = os.getenv('POSTGRES_PORT')
 POSTGRES_DB_NAME = os.getenv('POSTGRES_DB_NAME')
 MSF_WORKSPACE_DEFAULT = os.getenv('MSF_WORKSPACE_DEFAULT')
+NESSUS_DEF_DIR = os.getenv('NESSUS_DEF_DIR')
+NESSUS_LOC_DIR = os.getenv('NESSUS_LOC_DIR')
+HOST_SCAN_ID = os.getenv('HOST_SCAN_ID')
+OS_SCAN_ID = os.getenv('OS_SCAN_ID')
+FULL_SCAN_ID = os.getenv('FULL_SCAN_ID')
 
 ################################################################################
 # Msf Console Command Class - containing msf methods
@@ -77,20 +85,76 @@ class MsfCommands(object):
         cmd = "workspace -a " + workspace_name
         msf_reply = self.msfconsole.callback(cmd, verbose=True)
 
-
-
-
-#################################
-
-    def scan_policies(self):
+    def show_scan_policies(self):
         """
-        Returns list of Nessus scan policies.
+        Print list of Nessus scan policies.
         """
+        cmd = "nessus_policy_list"
+        msf_reply = self.msfconsole.callback(cmd, verbose=True)
+
+    def scan(self, scan_name, ip_addr):
+        """
+        Scan an IP address with a given scan policy.
+        """
+        # create scan
+        if 'host_scan' in scan_name:
+            uuid = HOST_SCAN_ID
+        elif 'os_scan' in scan_name:
+            uuid = OS_SCAN_ID
+        elif 'full_scan' in scan_name:
+            uuid = FULL_SCAN_ID
+        cmd = "nessus_scan_new "
+        cmd += uuid + " "
+        cmd += scan_name + "_policy "
+        cmd += 'none' + " "
+        cmd += ip_addr
+        msf_reply = self.msfconsole.callback(cmd, verbose=False)
+        if 'scan added' not in msf_reply:
+            raise Exception("error creating scan")
+        # retrieve scan id
+        regex = "nessus_scan_launch (\d+)"
+        m = re.search(regex, msf_reply, re.IGNORECASE)
         try:
-            print("[*] collecting scan policies from nessus")
-            cmd = "nessus_policy_list"
-            msf_reply = self.msfconsole.callback(cmd, verbose=False)
-            scan_policies = policy_list_parser(msf_reply)
-            return scan_policies
+            scanid = m.group(1)
+            i = int(scanid) # check value is integer
         except Exception as e:
-            print('[!] Error10: ', e)
+            raise Exception("error creating scan 2")
+        # launch scan
+        cmd = "nessus_scan_launch " + scanid
+        msf_reply = self.msfconsole.callback(cmd, verbose=True)
+        if "successfully launched" not in msf_reply:
+            raise Exception("error launching scan")
+        # wait for scan to complete
+        scanning = True
+        while scanning:
+            time.sleep(5)
+            print('[*] scan running...')
+            cmd = "nessus_scan_list"
+            msf_reply = self.msfconsole.callback(cmd, verbose=False)
+            for line in msf_reply.splitlines():
+                if scanid in line and 'completed' in line:
+                    print("[*] scan completed")
+                    scanning = False
+        # import scan into postgresql
+        cmd = "nessus_db_import " + scanid
+        msf_reply = self.msfconsole.callback(cmd, verbose=True)
+        if 'Done' not in msf_reply:
+            raise Exception("error importing scan")
+        # export scan to csv
+        cmd = "nessus_scan_export " + scanid + " CSV"
+        msf_reply = self.msfconsole.callback(cmd, verbose=False)
+        if 'export is ready' not in msf_reply:
+            raise Exception("error exporting scan to csv")
+        # move scan to local nessus temp folder
+        shell_cmd = "install -C -m 775 -o ares -g ares "
+        shell_cmd += NESSUS_DEF_DIR + "/" + scan_name + "*.csv "
+        shell_cmd += NESSUS_LOC_DIR
+        process = subprocess.Popen(shell_cmd,                 \
+                                   universal_newlines = True, \
+                                   stdout = subprocess.PIPE,  \
+                                   stderr = subprocess.PIPE,  \
+                                   shell=True,                \
+                                   bufsize=0)
+        out, err = process.communicate()
+        if err:
+            raise Exception(err)
