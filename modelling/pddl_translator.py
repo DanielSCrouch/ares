@@ -1,4 +1,5 @@
 
+
 def generate_problem(self, depth=0):
     """
     Generates a PDDL problem file for use with planner.

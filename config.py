@@ -31,3 +31,6 @@ COMMANDS = Commands()
 TARGETS = {}
 NESSUS_DEF_DIR = os.getenv('NESSUS_DEF_DIR')
 NESSUS_LOC_DIR = os.getenv('NESSUS_LOC_DIR')
+VAR1 = None
+VAR2 = None
+VAR3 = None

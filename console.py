@@ -121,8 +121,8 @@ class Console(Cmd):
         if len(cmds) != 2:
             print("*** invalid number of arguments, see 'help scan'")
             return
-        scan_type = cmds[0]
-        target_name = cmds[1]
+        scan_type = cmds[0].strip()
+        target_name = cmds[1].strip()
         if scan_type not in ['host', 'os', 'full']:
             print("*** invalid scan name, see 'help scan'")
         if target_name not in config.TARGETS.keys():
@@ -141,7 +141,7 @@ class Console(Cmd):
         return scan_opts
 
     ############################################
-    # set show
+    # show target info
     ############################################
 
     def do_show(self, cmd):
@@ -166,6 +166,10 @@ class Console(Cmd):
                 config.COMMANDS.show_target(cmds[1])
         except Exception as e:
             handle(e)
+
+    ############################################
+    # shell console
+    ############################################
 
     def do_shell(self, cmd):
         """

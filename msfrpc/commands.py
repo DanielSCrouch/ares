@@ -7,6 +7,8 @@ import re
 import time
 import subprocess
 from dotenv import load_dotenv
+# global variables
+import config
 
 ################################################################################
 # Local import
@@ -92,10 +94,11 @@ class MsfCommands(object):
         cmd = "nessus_policy_list"
         msf_reply = self.msfconsole.callback(cmd, verbose=True)
 
-    def scan(self, scan_name, ip_addr):
+    def scan(self, scan_name, target_name):
         """
         Scan an IP address with a given scan policy.
         """
+        ip_addr = config.TARGETS[target_name].ip
         # create scan
         if 'host_scan' in scan_name:
             uuid = HOST_SCAN_ID
@@ -146,9 +149,9 @@ class MsfCommands(object):
         if 'export is ready' not in msf_reply:
             raise Exception("error exporting scan to csv")
         # move scan to local nessus temp folder
-        shell_cmd = "install -C -m 775 -o ares -g ares "
+        shell_cmd = "install -D -C -m 775 -o ares -g ares "
         shell_cmd += NESSUS_DEF_DIR + "/" + scan_name + "*.csv "
-        shell_cmd += NESSUS_LOC_DIR
+        shell_cmd += " -t " + NESSUS_LOC_DIR + "/" + target_name
         process = subprocess.Popen(shell_cmd,                 \
                                    universal_newlines = True, \
                                    stdout = subprocess.PIPE,  \

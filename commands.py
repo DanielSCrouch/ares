@@ -59,13 +59,14 @@ class Commands(object):
             return False
 
     def scan(self, target_name, scan_type):
+        if scan_type == 'host':
+            config.MSFCOMMANDS.scan('host_scan', target_name)
+        if scan_type == 'os':
+            config.MSFCOMMANDS.scan('os_scan', target_name)
+        if scan_type == 'full':
+            config.MSFCOMMANDS.scan('full_scan', target_name)
+        scan_path = Path.cwd().glob('nessus_scans_tmp/' + target_name + '/' + scan_type + '*.csv')
+        for file in scan_path:
+            file_path = file
         target = config.TARGETS[target_name]
-        # if 'host' in scan_type:
-        #     config.MSFCOMMANDS.scan('host_scan', target.ip)
-        # if 'os' in scan_type:
-        #     config.MSFCOMMANDS.scan('os_scan', target.ip)
-        # if 'full' in scan_type:
-        #     config.MSFCOMMANDS.scan('full_scan', target.ip)
-        cwd = Path.cwd()
-        scan_path = Path.cwd() / 'nessus_scans_tmp' / 'os_scan_bruce.csv'
-        target.import_scan(scan_path)
+        target.import_scan(file_path)
