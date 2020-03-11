@@ -46,27 +46,18 @@ class MsfCommands(object):
     Defines a collection of MsfConsole commands.
     """
 
-    def __init__(self):
-        self.msfconsole = None
-
-    def connect(self, msfconsole):
-        """
-        Connect commands class to console to enable command execution
-        """
-        self.msfconsole = msfconsole
-
     def connect_nessus(self):
         """
         Creates bridge from Metasploit to Nessus.
         """
         cmd = 'load nessus'
-        msf_reply = self.msfconsole.callback(cmd)
+        msf_reply = config.MSFCONSOLE.callback(cmd)
         cmd = "nessus_connect " +       \
                NESSUS_USERNAME  + ':' + \
                NESSUS_PASSWORD  + '@' + \
                NESSUS_HOST      + ':' + \
                NESSUS_PORT      + ' ok'
-        msf_reply = self.msfconsole.callback(cmd)
+        msf_reply = config.MSFCONSOLE.callback(cmd)
 
     def connect_database(self):
         """
@@ -76,7 +67,7 @@ class MsfCommands(object):
         cmd += POSTGRES_USER + ":" + POSTGRES_PASSWORD + "@"
         cmd += POSTGRES_SERVER + ":" + POSTGRES_PORT + "/"
         cmd += POSTGRES_DB_NAME
-        msf_reply = self.msfconsole.callback(cmd, verbose=False)
+        msf_reply = config.MSFCONSOLE.callback(cmd, verbose=False)
         if POSTGRES_DB_NAME not in msf_reply:
             raise Exception("[!] unable to connect to database \n")
 
@@ -112,7 +103,7 @@ class MsfCommands(object):
         cmd += 'none' + " "
         cmd += ip_addr
         print("command:", cmd)
-        msf_reply = self.msfconsole.callback(cmd, verbose=False)
+        msf_reply = config.MSFCONSOLE.callback(cmd, verbose=False)
         if 'scan added' not in msf_reply:
             raise Exception("error creating scan")
         # retrieve scan id
@@ -126,7 +117,7 @@ class MsfCommands(object):
             raise Exception("error creating scan 2")
         # launch scan
         cmd = "nessus_scan_launch " + scanid
-        msf_reply = self.msfconsole.callback(cmd, verbose=True)
+        msf_reply = config.MSFCONSOLE.callback(cmd, verbose=True)
         if "successfully launched" not in msf_reply:
             raise Exception("error launching scan")
         # wait for scan to complete
@@ -135,19 +126,19 @@ class MsfCommands(object):
             time.sleep(5)
             print('[*] scan running...')
             cmd = "nessus_scan_list"
-            msf_reply = self.msfconsole.callback(cmd, verbose=False)
+            msf_reply = config.MSFCONSOLE.callback(cmd, verbose=False)
             for line in msf_reply.splitlines():
                 if scanid in line and 'completed' in line:
                     print("[*] scan completed")
                     scanning = False
         # import scan into postgresql
         cmd = "nessus_db_import " + scanid
-        msf_reply = self.msfconsole.callback(cmd, verbose=True)
+        msf_reply = config.MSFCONSOLE.callback(cmd, verbose=True)
         if 'Done' not in msf_reply:
             raise Exception("error importing scan")
         # export scan to csv
         cmd = "nessus_scan_export " + scanid + " CSV"
-        msf_reply = self.msfconsole.callback(cmd, verbose=False)
+        msf_reply = config.MSFCONSOLE.callback(cmd, verbose=False)
         if 'export is ready' not in msf_reply:
             raise Exception("error exporting scan to csv")
         # move scan to local nessus temp folder
