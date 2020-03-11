@@ -85,14 +85,14 @@ class MsfCommands(object):
         Change workspace within Metasploit, create new if not already avaliable.
         """
         cmd = "workspace -a " + workspace_name
-        msf_reply = self.msfconsole.callback(cmd, verbose=True)
+        msf_reply = config.MSFCONSOLE.callback(cmd, verbose=True)
 
     def show_scan_policies(self):
         """
         Print list of Nessus scan policies.
         """
         cmd = "nessus_policy_list"
-        msf_reply = self.msfconsole.callback(cmd, verbose=True)
+        msf_reply = config.MSFCONSOLE.callback(cmd, verbose=True)
 
     def scan(self, scan_name, target_name):
         """
@@ -108,9 +108,10 @@ class MsfCommands(object):
             uuid = FULL_SCAN_ID
         cmd = "nessus_scan_new "
         cmd += uuid + " "
-        cmd += scan_name + "_policy "
+        cmd += scan_name + " "
         cmd += 'none' + " "
         cmd += ip_addr
+        print("command:", cmd)
         msf_reply = self.msfconsole.callback(cmd, verbose=False)
         if 'scan added' not in msf_reply:
             raise Exception("error creating scan")

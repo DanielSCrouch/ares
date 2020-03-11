@@ -70,3 +70,18 @@ class Commands(object):
             file_path = file
         target = config.TARGETS[target_name]
         target.import_scan(file_path)
+
+    def exit(self):
+        if config.MSFCONSOLE:
+            print("[*] stopping msfconsole")
+            config.MSFCONSOLE.stop_polling()
+        if config.MSFCLIENT:
+            print("[*] closing msfclient connection")
+            config.MSFCLIENT.close_connection()
+        if config.METASPLOIT:
+            print("[*] closing metasploit sub-process")
+            config.METASPLOIT.stop_service()
+        if config.NESSUS:
+            print("[*] closing Nessus subprocess")
+            config.NESSUS.stop_service()
+        print("Application closed.")

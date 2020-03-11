@@ -29,7 +29,7 @@ class PostgreSQL(object):
                                    universal_newlines = True, \
                                    shell=True,                \
                                    bufsize=0)
-        process.wait(timeout=1)
+        process.wait(timeout=10)
         error_stream = process.stderr
         error = error_stream.read()
         output_stream = process.stdout

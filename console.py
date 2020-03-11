@@ -212,15 +212,9 @@ class Console(Cmd):
         exit the application
         """
         try:
-            print("[*] stopping msfconsole")
-            config.MSFCONSOLE.stop_polling()
-            print("[*] closing msfclient connect")
-            config.MSFCLIENT.close_connection()
-            print("[*] closing metasploit sub-process")
-            config.METASPLOIT.stop_service()
+            config.COMMANDS.exit()
         except Exception as e:
-            print("Error: ", e)
-        print("[+] Closing application.")
+            handle(e)
         return True
 
     do_EOF = do_exit # assign end-of-line to exit
