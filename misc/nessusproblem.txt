@@ -1,0 +1,13 @@
+[*] Creating scan from policy number bbd4f805-3966-d464-b2d1-0079eb89d69708c3a05ec2812bcf, called host_scan_policy - none and scanning 10.91.251.173
+[*] New scan added
+[-] Error while running command nessus_scan_new: undefined method `[]' for nil:NilClass
+
+Call stack:
+/opt/metasploit-framework/embedded/framework/plugins/nessus.rb:979:in `cmd_nessus_scan_new'
+/opt/metasploit-framework/embedded/framework/lib/rex/ui/text/dispatcher_shell.rb:523:in `run_command'
+/opt/metasploit-framework/embedded/framework/lib/rex/ui/text/dispatcher_shell.rb:474:in `block in run_single'
+/opt/metasploit-framework/embedded/framework/lib/rex/ui/text/dispatcher_shell.rb:468:in `each'
+/opt/metasploit-framework/embedded/framework/lib/rex/ui/text/dispatcher_shell.rb:468:in `run_single'
+/opt/metasploit-framework/embedded/framework/lib/rex/ui/text/shell.rb:158:in `run'
+/opt/metasploit-framework/embedded/framework/lib/msf/ui/web/console.rb:76:in `block in initialize'
+/opt/metasploit-framework/embedded/framework/lib/msf/core/thread_manager.rb:106:in `block in spawn'

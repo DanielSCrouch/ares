@@ -121,6 +121,7 @@ class MsfCommands(object):
             scanid = m.group(1)
             i = int(scanid) # check value is integer
         except Exception as e:
+            print(msf_reply)
             raise Exception("error creating scan 2")
         # launch scan
         cmd = "nessus_scan_launch " + scanid
