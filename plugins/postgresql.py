@@ -55,6 +55,23 @@ class PostgreSQL(object):
         raise Exception("unexpected response from service call")
         return False
 
+    def stop_service(self):
+        """
+        Stops PostgreSQL server.
+        """
+        command = ["service postgresql start"]
+        process = subprocess.Popen(command,                   \
+                                   stdin = subprocess.PIPE,   \
+                                   stdout = subprocess.PIPE,  \
+                                   stderr = subprocess.PIPE,  \
+                                   universal_newlines = True, \
+                                   shell=True,                \
+                                   bufsize=0)
+        for line in process.stderr:
+            raise Exception(line.strip())
+            return False
+        return True
+
 ################################################################################
 # Main
 ################################################################################

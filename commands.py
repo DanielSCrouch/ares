@@ -84,4 +84,7 @@ class Commands(object):
         if config.NESSUS:
             print("[*] closing Nessus subprocess")
             config.NESSUS.stop_service()
+        if config.DATABASE:
+            print("[*] closing PostgreSQL subprocess")
+            config.DATABASE.stop_service()
         print("Application closed.")
