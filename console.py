@@ -138,7 +138,7 @@ class Console(Cmd):
         return scan_opts
 
     ############################################
-    # Import a scan 
+    # Import a scan
     ############################################
 
     def do_import(self, cmd):
@@ -197,6 +197,20 @@ class Console(Cmd):
                 config.COMMANDS.show_target(cmds[1])
             if cmds[0] == 'vulns':
                 config.COMMANDS.show_vulns(cmds[1])
+        except Exception as e:
+            handle(e)
+
+    ############################################
+    # shell console
+    ############################################
+
+    def do_exploit(self, cmd):
+        """
+        run exploit
+        """
+        print("[+] Running exploit")
+        try:
+            config.MSFEXPLOITS.reverse_shell()
         except Exception as e:
             handle(e)
 

@@ -10,6 +10,7 @@ from plugins.nessus import Nessus
 from msfrpc.client import MsfClient
 from msfrpc.console import MsfConsole
 from msfrpc.commands import MsfCommands
+from msfrpc.exploits import MsfExploits
 
 from planning.planner import Planner
 from commands import Commands
@@ -24,6 +25,7 @@ PLANNER = Planner()
 MSFCLIENT = MsfClient()
 MSFCONSOLE = MsfConsole()
 MSFCOMMANDS = MsfCommands()
+MSFEXPLOITS = MsfExploits()
 COMMANDS = Commands()
 # Target hosts {name, object}
 

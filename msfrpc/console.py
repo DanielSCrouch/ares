@@ -47,6 +47,7 @@ class MsfConsole(Cmd):
         self.cid = None
         self.msf_lock = Lock()
         self.polling = False
+        self.shell = False
 
     def connect(self, client):
         """
@@ -85,6 +86,10 @@ class MsfConsole(Cmd):
                 self.polling = False
                 return
             if 'data' in msf_reply.keys() and len(msf_reply['data']) > 0:
+                # check if shell session
+                if self.shell:
+                    msf_data = msf_reply['data']
+                    self.display(msf_data)
                 print("[!] unexpected console data:")
                 self.display(str(msf_reply))
             time.sleep(0.5)
@@ -137,6 +142,9 @@ class MsfConsole(Cmd):
         for console in msf_consoles:
             if console['id'] == self.cid:
                 busy_status = console['busy']
+                # check if running shell script
+                if busy_status is True and self.shell:
+                    return False
                 return console['busy']
         raise Exception("[!] Busy check, console not found.")
 
@@ -157,12 +165,13 @@ class MsfConsole(Cmd):
         self.callback(cmd)
         print('\n')
 
-    def callback(self, cmd, verbose=True):
+    def callback(self, cmd, verbose=True, shell=False):
         """
         Forward cmd to msfrpc console then record and display response.
         Optional Arguments:
         - verbose: print to cmd by default, set to false to prevent print
         """
+        self.shell = shell
         msf_data = self.write_read(cmd)['data']
         # display reply
         if verbose:
