@@ -103,29 +103,33 @@ class MsfConsole(Cmd):
         """
         self.msf_lock.acquire()
         # send command
+        self.msfwrite(cmd)
+        # wait until console not busy
+        self.wait_busy()
+        # receive response
+        msf_reply = self.msfread()
+        self.msf_lock.release()
+        return msf_reply
+
+    def msfwrite(self, cmd=None):
+        """
+        Write data to msf server without waiting for a response.
+        """
+        # send command
         if cmd and not cmd.endswith('\n'):
             cmd += '\n'
         if cmd:
             opts = [self.cid, cmd]
             self.client.msf_callback(MsfRpcMethod.ConsoleWrite, opts)
 
-        # wait until console not busy
-        time.sleep(0.1)
-        if self.check_busy():
-            print('[*] msfconsole loading...')
-        timer = 0
-        while self.check_busy() and timer < 10:
-            timer += 1
-            time.sleep(1)
-        if self.check_busy() and timer == 10:
-            print('[!] msf console timeout: busy for >10s')
-        # receive response
+    def msfread(self):
+        """
+        Read msf rpc console data.
+        """
         opts = [self.cid]
         msf_reply = self.client.msf_callback(MsfRpcMethod.ConsoleRead, opts)
         # update msf prompt
         self.prompt_update(msf_reply)
-        # return response
-        self.msf_lock.release()
         return msf_reply
 
     def prompt_update(self, msf_reply):
@@ -137,6 +141,20 @@ class MsfConsole(Cmd):
                 prompt = msf_reply['prompt'].replace('\x01', '')
                 prompt = prompt.replace('\x02', '')
                 self.prompt = prompt.replace("msf5 >", "msf>>>")
+
+    def wait_busy(self):
+        """
+        Wait while the console is busy.
+        """
+        time.sleep(0.1)
+        if self.check_busy():
+            print('[*] msfconsole loading...')
+        timer = 0
+        while self.check_busy() and timer < 10:
+            timer += 1
+            time.sleep(1)
+        if self.check_busy() and timer == 10:
+            print('[!] msf console timeout: busy for >10s')
 
     def check_busy(self):
         """
