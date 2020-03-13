@@ -114,9 +114,9 @@ class MsfConsole(Cmd):
         if self.check_busy():
             print('[*] msfconsole loading...')
         timer = 0
-        while self.check_busy() and timer <= 10:
-            timer += 0.1
-            time.sleep(0.1)
+        while self.check_busy() and timer < 10:
+            timer += 1
+            time.sleep(1)
         if self.check_busy() and timer == 10:
             print('[!] msf console timeout: busy for >10s')
         # receive response
@@ -147,9 +147,6 @@ class MsfConsole(Cmd):
         for console in msf_consoles:
             if console['id'] == self.cid:
                 busy_status = console['busy']
-                # check if running shell script
-                if busy_status is True and self.shell:
-                    return False
                 return console['busy']
         raise Exception("[!] Busy check, console not found.")
 
