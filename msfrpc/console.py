@@ -62,7 +62,6 @@ class MsfConsole(Cmd):
             raise MsfRpcError("unable to create a new console")
         # discard metasploit startup output
         while self.check_busy():
-            print('is busy is working')
             time.sleep(0.1)
         time.sleep(1) # wait for intro to print
         self.write_read()
@@ -124,14 +123,20 @@ class MsfConsole(Cmd):
         opts = [self.cid]
         msf_reply = self.client.msf_callback(MsfRpcMethod.ConsoleRead, opts)
         # update msf prompt
+        self.prompt_update(msf_reply)
+        # return response
+        self.msf_lock.release()
+        return msf_reply
+
+    def prompt_update(self, msf_reply):
+        """
+        Update console prompt based on msfrpc reply.
+        """
         if 'prompt' in msf_reply.keys() and \
             msf_reply['prompt'] != self.prompt:
                 prompt = msf_reply['prompt'].replace('\x01', '')
                 prompt = prompt.replace('\x02', '')
                 self.prompt = prompt.replace("msf5 >", "msf>>>")
-        # return response
-        self.msf_lock.release()
-        return msf_reply
 
     def check_busy(self):
         """
