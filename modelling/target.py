@@ -24,7 +24,7 @@ class Target(object):
         self.udp_ports = []
         self.services = []
         self.installed_services = []
-        self.vulns = []
+        self.vulns = {}
         self.os = []
 
     def __str__(self):
@@ -57,8 +57,8 @@ class Target(object):
                 string += '\n              ' + str(item)
             string += '\n              total(' + str(len(attribute)) + ')'
         # Vulnerabilities
-        attribute = self.vulns
-        string += "\n\n   Vuls     : "
+        attribute = list(self.vulns.keys())
+        string += "\n\n   Vulns     : "
         if len(attribute) >1:
             string += str(attribute[0]) + ''
             for item in attribute[1:min(5, len(attribute))]:
@@ -92,6 +92,7 @@ class Target(object):
                 port = str(row['Port'])
                 name = row['Name']
                 plugin_out = row['Plugin Output']
+                risk = row['Risk']
 
                 # add new hosts
                 if ip in self.ip:
@@ -111,13 +112,12 @@ class Target(object):
                     if service_name is not None:
                         s = Service(plugin, service_name, protocol, port)
                         self.services.append(s)
-                        self.services.append(s)
 
                     # identify and add vulnerabilities
                     if len(cve_id) > 3:
-                        v = Vuln(plugin, cve_id, cvss, protocol, port)
-                        self.vulns.append(v)
-                        self.vulns.append(v)
+                        if cve_id not in self.vulns.keys():
+                            v = Vuln(plugin, cve_id, cvss, protocol, port, risk)
+                            self.vulns[v] = v
 
                     # identify and add OS
                     if plugin == "11936":

@@ -138,6 +138,40 @@ class Console(Cmd):
         return scan_opts
 
     ############################################
+    # Import a scan 
+    ############################################
+
+    def do_import(self, cmd):
+        """
+        Import a scan to a targeted host.
+        Options:
+        - host, os, full
+        - target name
+        """
+        # command validation
+        cmds = cmd.split()
+        if len(cmds) != 2:
+            print("*** invalid number of arguments, see 'help scan'")
+            return
+        scan_type = cmds[0].strip()
+        target_name = cmds[1].strip()
+        if scan_type not in ['host', 'os', 'full']:
+            print("*** invalid scan name, see 'help scan'")
+        if target_name not in config.TARGETS.keys():
+            print("*** target not known")
+        # command execution
+        try:
+            config.COMMANDS.scan_import(target_name, scan_type)
+        except Exception as e:
+            handle(e)
+
+    def complete_import(self, text, line, begidx, endidx):
+        options = ['host', 'os', 'full']
+        if text:
+            scan_opts = ([o for o in options if o.startswith(text)])
+        return scan_opts
+
+    ############################################
     # show target info
     ############################################
 
@@ -161,6 +195,8 @@ class Console(Cmd):
                 config.COMMANDS.show_targets()
             if cmds[0] == 'target':
                 config.COMMANDS.show_target(cmds[1])
+            if cmds[0] == 'vulns':
+                config.COMMANDS.show_vulns(cmds[1])
         except Exception as e:
             handle(e)
 

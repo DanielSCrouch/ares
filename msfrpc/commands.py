@@ -154,3 +154,25 @@ class MsfCommands(object):
         out, err = process.communicate()
         if err:
             raise Exception(err)
+
+    def search_exploit(self, id):
+        """
+        Return module (and rank) of msf exploits targeted to vulnerability.
+        """
+        cmd = "search " + id
+        msf_reply = config.MSFCONSOLE.callback(cmd, verbose=False)
+        # Parse response
+        exploits = {}
+        lines = (line for line in msf_reply.splitlines())
+        for line in lines:
+            if "No results from search" in line:
+                return {}
+            if "Rank" in line:
+                rank_index = line.split().index('Rank')
+            if "---" in line:
+                break
+        for line in lines:
+            items = line.split()
+            if len(items) > 1:
+                exploits[items[1]] = items[rank_index]
+        return exploits

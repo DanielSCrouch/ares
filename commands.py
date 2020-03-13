@@ -43,10 +43,27 @@ class Commands(object):
 
     def show_target(self, target_name):
         """
-        Print list of targets.
+        Display a targets information.
         """
         target = config.TARGETS[target_name]
         print(target)
+
+    def show_vulns(self, target_name):
+        """
+        Display a targets vulnerabilities.
+        """
+        s = "\n   CVE ID            Risk         Msf       Ares"
+        s += '\n   ----------------------------------------------------'
+        target = config.TARGETS[target_name]
+        vulns = target.vulns.values()
+        for vuln in vulns:
+            cve_id = vuln.cve_id
+            risk = vuln.risk
+            msf = str(len(vuln.msf_modules.keys()))
+            ares = "no"
+            s += "\n   {: <3}     {: <8}     {: <5}     {: <5}".format(\
+                        cve_id, risk, msf, ares)
+        print(s)
 
     def validip(self, ip_addr):
         """
@@ -69,7 +86,22 @@ class Commands(object):
         for file in scan_path:
             file_path = file
         target = config.TARGETS[target_name]
+        self.scan_import(target_name, scan_type)
+
+    def scan_import(self, target_name, scan_type):
+        scan_path = Path.cwd().glob('nessus_scans_tmp/' + target_name + '/' + scan_type + '*.csv')
+        for file in scan_path:
+            file_path = file
+        target = config.TARGETS[target_name]
         target.import_scan(file_path)
+        self.update_vulns(target_name)
+
+    def update_vulns(self, target_name):
+        target = config.TARGETS[target_name]
+        for vuln in target.vulns.values():
+            vuln_id = vuln.cve_id
+            msfexploits = config.MSFCOMMANDS.search_exploit(vuln_id)
+            vuln.msf_modules = msfexploits
 
     def exit(self):
         if config.MSFCONSOLE:

@@ -51,6 +51,7 @@ class Nessus(object):
                                    bufsize=0)
         # for line in process.stdout:
         #     print(line.strip())
+        process.wait(timeout=10)
         for line in process.stderr:
             raise Exception(line.strip())
             return False

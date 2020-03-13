@@ -67,6 +67,7 @@ class PostgreSQL(object):
                                    universal_newlines = True, \
                                    shell=True,                \
                                    bufsize=0)
+        process.wait(timeout=10)
         for line in process.stderr:
             raise Exception(line.strip())
             return False
