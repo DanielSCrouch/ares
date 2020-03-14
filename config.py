@@ -15,6 +15,8 @@ from msfrpc.exploits import MsfExploits
 from planning.planner import Planner
 from commands import Commands
 
+# main console
+CONSOLE = None
 # Plugin processes
 DATABASE = PostgreSQL()
 METASPLOIT = Metasploit()

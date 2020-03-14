@@ -18,7 +18,6 @@ class Console(Cmd):
     with open('misc/intro.txt', 'r') as f:
         intro = f.read()
 
-
     ############################################
     # Initial Setup
     ############################################
@@ -27,6 +26,8 @@ class Console(Cmd):
         """
         Setup services avaliable to console.
         """
+        # console hook
+        config.CONSOLE = self
         # command validation
         cmds = cmd.split()
         if len(cmds) != 1:
@@ -35,13 +36,13 @@ class Console(Cmd):
         # command execution
         try:
             print("[*] loading PostgreSQL plugin")
-            # config.DATABASE.start_service()
+            config.DATABASE.start_service()
             print("[*] PostgreSQL database now avaliable")
             print("[*] loading Metasploit plugin")
             config.METASPLOIT.start_service()
             print("[*] Metasploit now avaliable")
             print("[*] loading Nessus plugin")
-            # config.NESSUS.start_service()
+            config.NESSUS.start_service()
             print("[*] Nessus now avaliable")
             print("[*] logging into Metasploit via RPC")
             config.MSFCLIENT.login()
@@ -50,13 +51,13 @@ class Console(Cmd):
             config.MSFCONSOLE.connect(config.MSFCLIENT)
             print("[*] msf console now avaliable, see 'help msf'")
             print("[*] connecting msf commmand tool to msf console")
-            # config.MSFCOMMANDS.connect_nessus()
+            config.MSFCOMMANDS.connect_nessus()
             print("[*] Nessus now avaliable to msf")
             print("[*] connecting Metasploit to database")
-            # config.MSFCOMMANDS.connect_database()
+            config.MSFCOMMANDS.connect_database()
             print("[+] Metasploit connected to database")
             print("[+] setting up msf workspace")
-            # config.MSFCOMMANDS.set_workspace('default')
+            config.MSFCOMMANDS.set_workspace('default')
             print("[*] setup complete")
         except Exception as e:
             handle(e)
@@ -76,7 +77,9 @@ class Console(Cmd):
             return
         # command execution
         try:
-            config.MSFCONSOLE.prompt = 'msf' + self.prompt
+            # config.MSFCONSOLE.prompt = 'msf' + self.prompt
+            config.MSFCONSOLE.prompt_update()
+            config.MSFCONSOLE.set_shell_verbose()
             config.MSFCONSOLE.cmdloop()
         except Exception as e:
             handle(e)
@@ -211,8 +214,10 @@ class Console(Cmd):
         print("[+] Running exploit")
         try:
             config.MSFEXPLOITS.reverse_shell()
+            print("[+] complete")
         except Exception as e:
             handle(e)
+
 
     ############################################
     # shell console
