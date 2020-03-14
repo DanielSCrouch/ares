@@ -1,29 +1,40 @@
 
+import os
+import re
+import glob
+import time
+import ipaddress
+import subprocess
+from pathlib import Path
+from modelling.target import Target
+# global variables
+import config
 
-def generate_problem(self, depth=0):
-    """
-    Generates a PDDL problem file for use with planner.
-    - optional arguments:
-    depth: determines how many progress steps required to achieve goal
-    """
-    # path = glob.glob("/problem_test.txt")
-    cwd = Path.cwd()
-    problem_file = Path.cwd() / 'pddl_files' / 'problem.pddl'
-    problem = PDDLTranslate(self).get_header()
-    problem += PDDLTranslate(self).get_objects()
-    problem += PDDLTranslate(self).get_init(depth)
-    problem += PDDLTranslate(self).get_goals(depth)
-    problem += '\n\n)'
-    problem_file.write_text(problem)
-    print('Done!')
-    
+################################################################################
+# Class for translating Targets to a PDDL problem
+################################################################################
 
 class PDDLTranslate(object):
     """
-    Defines a collection of methods for translating models to PDDL problems
+    Defines a collection of methods for translating models to PDDL problems.
     """
-    def __init__(self, model):
-        self.model = model
+
+    def generate_problem(self, depth=1):
+        """
+        Generates a PDDL problem file for use with planner.
+        - optional arguments:
+        depth: determines how many progress steps required to achieve goal
+        """
+        # path = glob.glob("/problem_test.txt")
+        cwd = Path.cwd()
+        problem_file = Path.cwd() / 'planning' / 'pddl_files' / 'problem.pddl'
+        problem = self.get_header()
+        problem += self.get_objects()
+        problem += self.get_init(depth)
+        problem += self.get_goals(depth)
+        problem += '\n\n)'
+        problem_file.write_text(problem)
+        return True
 
     def get_header(self):
         p = "(define (problem attackvector) (:domain attacksurface)"
@@ -33,45 +44,49 @@ class PDDLTranslate(object):
         p = "\n\n(:objects"
         # add hosts
         p += "\n    placeholder - host"
-        for host_name in self.model.get_host_names():
-            host_name = self.get_legal(host_name)
-            p += "\n    " + host_name + " - host"
+        for target in config.TARGETS.values():
+            name = self.get_legal(target.name)
+            p += "\n    " + name + " - host"
         # add vulns
         p += "\n    placeholder - vuln"
-        for vuln_name in self.model.get_vuln_names():
-            vuln_name = self.get_legal(vuln_name)
-            p += "\n    " + vuln_name + " - vuln"
+        vulns = set()
+        for target in config.TARGETS.values():
+            for vuln in target.vulns.keys():
+                vulns.add(vuln)
+        for vuln in vulns:
+            name = self.get_legal(vuln.cve_id)
+            p += "\n    " + name + " - vuln"
         # add os
         p += "\n    placeholder - os"
-        # port
-        p += "\n    placeholder - port"
         # end
         p += "\n    )"
         return p
 
     def get_init(self, depth):
         p = "\n\n(:init"
-        p += "(is placeholder)"
-        for host in self.model.get_hosts():
-            host_name = self.get_legal(host.host)
+        p += " (ishost placeholder)"
+        for target in config.TARGETS.values():
+            name = self.get_legal(target.name)
+            # add targets
+            p += "\n       (ishost " + name + ")"
             # add found hosts
-            if host.found:
-                p += "\n    (found " + host_name + ")"
-        p += "\n    )"
+            if target.scanned:
+                p += "\n       (scanned " + name + ")"
+        p += "\n       )"
         return p
 
     def get_goals(self, depth):
         p = "\n\n(:goal"
-        if len(self.model.get_host_names()) > 1:
+        if len(config.TARGETS) > 1:
             p += " (or"
-            for host_name in self.model.get_host_names():
-                host_name = self.get_legal(host_name)
-                p += "\n    (has_progress" + str(depth) + " " + host_name + ")"
-            p += "\n    "
+            for target in config.TARGETS.values():
+                name = self.get_legal(target.name)
+                p += "\n    (has_progress" + str(depth) + " " + name + ")"
+            p += "\n    )"
         else:
-            for host_name in self.model.get_host_names():
-                host_name = self.get_legal(host_name)
-                p += "\n    (has_progress" + str(depth) + " " + host_name + ")"
+            for target in config.TARGETS.values():
+                name = self.get_legal(target.name)
+                p += "\n    (has_progress" + str(depth) + " " + name + ")"
         p += "\n    )"
         return p
 
@@ -79,4 +94,5 @@ class PDDLTranslate(object):
         if name[0].isdigit():
             name = 'xx' + name
         name = name.replace('.', '_')
+        name = name.replace('-', '_')
         return name

@@ -7,7 +7,7 @@ from cmd import Cmd
 
 # local imports
 import config
-from modelling.target import Target
+
 
 ################################################################################
 # Main ARES Console
@@ -18,8 +18,14 @@ class Console(Cmd):
     with open('misc/intro.txt', 'r') as f:
         intro = f.read()
 
+    def __init__(self):
+        super(Console, self).__init__()
+        config.COMMANDS.target('bruce', '10.91.251.103')
+        config.COMMANDS.target('nigel', '10.91.251.104')
+        config.COMMANDS.scan_import('full', 'bruce')
+
     ############################################
-    # Initial Setup
+    # start
     ############################################
 
     def do_setup(self, cmd):
@@ -36,7 +42,7 @@ class Console(Cmd):
         # command execution
         try:
             print("[*] loading PostgreSQL plugin")
-            config.DATABASE.start_service()
+            # config.DATABASE.start_service()
             print("[*] PostgreSQL database now avaliable")
             print("[*] loading Metasploit plugin")
             config.METASPLOIT.start_service()
@@ -51,19 +57,128 @@ class Console(Cmd):
             config.MSFCONSOLE.connect(config.MSFCLIENT)
             print("[*] msf console now avaliable, see 'help msf'")
             print("[*] connecting msf commmand tool to msf console")
-            config.MSFCOMMANDS.connect_nessus()
+            # config.MSFCOMMANDS.connect_nessus()
             print("[*] Nessus now avaliable to msf")
             print("[*] connecting Metasploit to database")
-            config.MSFCOMMANDS.connect_database()
+            # config.MSFCOMMANDS.connect_database()
             print("[+] Metasploit connected to database")
             print("[+] setting up msf workspace")
-            config.MSFCOMMANDS.set_workspace('default')
+            # config.MSFCOMMANDS.set_workspace('default')
             print("[*] setup complete")
         except Exception as e:
             handle(e)
 
     ############################################
-    # Metasploit console
+    # scan
+    ############################################
+
+    def do_scan(self, cmd):
+        """
+        Scan hosts.
+        Options: hosts, os, full
+        """
+        # command validation
+        cmds = cmd.split()
+        if len(cmds) != 2:
+            print("*** invalid number of arguments, see 'help scan'")
+            return
+        scan_type = cmds[0].strip()
+        target_name = cmds[1].strip()
+        try:
+            if scan_type == 'hosts':
+                config.HOSTSCAN.scan(target_name, verbose=True)
+            if scan_type == 'full':
+                config.FULLSCAN.scan(scan_name, target_name, verbose=True)
+        except Exception as e:
+            handle(e)
+
+    def complete_scan(self, text, line, begidx, endidx):
+        options = ['host', 'os', 'full']
+        if text:
+            scan_opts = ([o for o in options if o.startswith(text)])
+        return scan_opts
+
+    ############################################
+    # target
+    ############################################
+
+    def do_target(self, cmd):
+        """
+        Target host as the ip address.
+        """
+        # command validation
+        cmds = cmd.split()
+        if len(cmds) != 2:
+            print("*** invalid number of arguments, see 'target'")
+            return
+        if not config.COMMANDS.validip(cmds[1]):
+            print("*** invalid IP address")
+            return
+        name = cmds[0]
+        ip = cmds[1]
+        # command execution
+        try:
+            config.COMMANDS.target(name, ip, verbose=True)
+        except Exception as e:
+            handle(e)
+
+    ############################################
+    # show
+    ############################################
+
+    def do_show(self, cmd):
+        """
+        Show target attributes
+        - Options:
+        """
+        # Command validation
+        cmds = cmd.split()
+
+        # Command execution
+        try:
+            if cmds[0] == 'targets':
+                config.COMMANDS.show_targets()
+            if cmds[0] == 'target':
+                config.COMMANDS.show_target(cmds[1])
+            if cmds[0] == 'vulns':
+                config.COMMANDS.show_vulns(cmds[1])
+        except Exception as e:
+            handle(e)
+
+    ############################################
+    # import
+    ############################################
+
+    def do_import(self, cmd):
+        """
+        Import a scan to a targeted host.
+        Options: full, target name
+        """
+        # command validation
+        cmds = cmd.split()
+        if len(cmds) != 2:
+            print("*** invalid number of arguments, see 'help scan'")
+            return
+        scan_type = cmds[0].strip()
+        target_name = cmds[1].strip()
+        if scan_type not in ['full']:
+            print("*** invalid scan name, see 'help scan'")
+        if target_name not in config.TARGETS.keys():
+            print("*** target not known")
+        # command execution
+        try:
+            config.COMMANDS.scan_import(scan_type, target_name)
+        except Exception as e:
+            handle(e)
+
+    def complete_import(self, text, line, begidx, endidx):
+        options = ['full']
+        if text:
+            scan_opts = ([o for o in options if o.startswith(text)])
+        return scan_opts
+
+    ############################################
+    # metasploit
     ############################################
 
     def do_msf(self, cmd):
@@ -85,126 +200,33 @@ class Console(Cmd):
             handle(e)
 
     ############################################
-    # add target
+    # shell
     ############################################
 
-    def do_target(self, cmd):
+    def do_shell(self, cmd):
         """
-        Set create a target as the specificed IP address.
+        run a shell command.
         """
-        # command validation
-        cmds = cmd.split()
-        if len(cmds) != 2:
-            print("*** invalid number of arguments, see 'target'")
-            return
-        if not config.COMMANDS.validip(cmds[1]):
-            print("*** invalid IP address")
-            return
-        target_name = cmds[0]
-        target_ip = cmds[1]
-        # command execution
-        config.TARGETS[target_name] = Target(target_ip)
-
-    ############################################
-    # Scan a target
-    ############################################
-
-    def do_scan(self, cmd):
-        """
-        Scan a targeted host.
-        Options:
-        - host, os, full
-        - target name
-        """
-        # command validation
-        cmds = cmd.split()
-        if len(cmds) != 2:
-            print("*** invalid number of arguments, see 'help scan'")
-            return
-        scan_type = cmds[0].strip()
-        target_name = cmds[1].strip()
-        if scan_type not in ['host', 'os', 'full']:
-            print("*** invalid scan name, see 'help scan'")
-        if target_name not in config.TARGETS.keys():
-            print("*** target not known")
-        # command execution
         try:
-            config.COMMANDS.scan(target_name, scan_type)
-        except Exception as e:
-            handle(e)
-
-
-    def complete_scan(self, text, line, begidx, endidx):
-        options = ['host', 'os', 'full']
-        if text:
-            scan_opts = ([o for o in options if o.startswith(text)])
-        return scan_opts
-
-    ############################################
-    # Import a scan
-    ############################################
-
-    def do_import(self, cmd):
-        """
-        Import a scan to a targeted host.
-        Options:
-        - host, os, full
-        - target name
-        """
-        # command validation
-        cmds = cmd.split()
-        if len(cmds) != 2:
-            print("*** invalid number of arguments, see 'help scan'")
-            return
-        scan_type = cmds[0].strip()
-        target_name = cmds[1].strip()
-        if scan_type not in ['host', 'os', 'full']:
-            print("*** invalid scan name, see 'help scan'")
-        if target_name not in config.TARGETS.keys():
-            print("*** target not known")
-        # command execution
-        try:
-            config.COMMANDS.scan_import(target_name, scan_type)
-        except Exception as e:
-            handle(e)
-
-    def complete_import(self, text, line, begidx, endidx):
-        options = ['host', 'os', 'full']
-        if text:
-            scan_opts = ([o for o in options if o.startswith(text)])
-        return scan_opts
-
-    ############################################
-    # show target info
-    ############################################
-
-    def do_show(self, cmd):
-        """
-        Display environment data.
-        - Options:
-        """
-        # Command validation
-        cmds = cmd.split()
-        if len(cmds) == 1 and cmds[0] not in ['policies', 'scans', 'targets']:
-            print("*** invalid arguments, see 'help show'")
-            return
-        # Command execution
-        try:
-            if cmds[0] == 'policies':
-                config.MSFCOMMANDS.show_scan_policies()
-            if cmds[0] == 'scans':
-                config.COMMANDS.show_scan_names()
-            if cmds[0] == 'targets':
-                config.COMMANDS.show_targets()
-            if cmds[0] == 'target':
-                config.COMMANDS.show_target(cmds[1])
-            if cmds[0] == 'vulns':
-                config.COMMANDS.show_vulns(cmds[1])
+            config.COMMANDS.shell(cmd)
         except Exception as e:
             handle(e)
 
     ############################################
-    # shell console
+    # plan
+    ############################################
+
+    def do_plan(self, cmd):
+        """
+        execute planner.
+        """
+        try:
+            config.COMMANDS.plan()
+        except Exception as e:
+            handle(e)
+
+    ############################################
+    # exploit
     ############################################
 
     def do_exploit(self, cmd):
@@ -219,17 +241,6 @@ class Console(Cmd):
             handle(e)
 
 
-    ############################################
-    # shell console
-    ############################################
-
-    def do_shell(self, cmd):
-        """
-        run a shell command
-        """
-        print("[+] Running a shell command")
-        output = os.popen(cmd).read()
-        print(output)
 
     ############################################
     # generic console commands

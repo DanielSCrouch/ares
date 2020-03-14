@@ -19,12 +19,12 @@ Cueing down from goal distance:    1 into depth [1]
 
 ff: found legal plan as follows
 
-step    0: HOST_SCAN XX10_91_251_173
+step    0: SCAN NIGEL
      
 
-time spent:    0.00 seconds instantiating 4 easy, 0 hard action templates
-               0.00 seconds reachability analysis, yielding 16 facts and 4 actions
-               0.00 seconds creating final representation with 16 relevant facts, 0 relevant fluents
+time spent:    0.00 seconds instantiating 3 easy, 0 hard action templates
+               0.00 seconds reachability analysis, yielding 7 facts and 2 actions
+               0.00 seconds creating final representation with 6 relevant facts, 0 relevant fluents
                0.00 seconds computing LNF
                0.00 seconds building connectivity graph
                0.00 seconds searching, evaluating 2 states, to a max depth of 1

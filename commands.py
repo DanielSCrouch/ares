@@ -8,6 +8,7 @@ import time
 import ipaddress
 import subprocess
 from pathlib import Path
+from modelling.target import Target
 # global variables
 import config
 
@@ -20,6 +21,40 @@ class Commands(object):
     Defines a collection of MsfConsole commands.
     """
 
+    def plan(self, verbose=False):
+        if len(config.TARGETS) == 0:
+            print("no targets, see 'help target'")
+            return
+        print("[*] generating problem file")
+        config.PDDLTRANSLATE.generate_problem()
+        print("[*] problem file complete")
+        print("[*] running planner")
+        config.PLANNER.run()
+        print("[*] plan complete")
+
+    def target(self, name, ip, verbose=False):
+        config.TARGETS[name] = Target(name, ip)
+        # display output
+        if verbose:
+            print('\n    ' + 'targets' + '\n    ' + '=' * 60)
+            for target in config.TARGETS.values():
+                print('   ', target.name, target.ip)
+
+    def show_targets(self):
+        """
+        Print list of targets.
+        """
+        print('\n    ' + 'targets' + '\n    ' + '=' * 60)
+        for target in config.TARGETS.values():
+            print('   ', target.name, target.ip)
+
+    def show_target(self, target_name):
+        """
+        Display a targets information.
+        """
+        target = config.TARGETS[target_name]
+        print(target)
+
     def show_scan_names(self):
         """
         Print list of completed scan names.
@@ -31,22 +66,6 @@ class Commands(object):
         for file_name in file_names:
             s += '\n' + file_name.replace(".csv", "")[:-7]
         print(s)
-
-    def show_targets(self):
-        """
-        Print list of targets.
-        """
-        s = 'Name \n----'
-        for target_name in config.TARGETS.keys():
-            s += '\n' + target_name
-        print(s)
-
-    def show_target(self, target_name):
-        """
-        Display a targets information.
-        """
-        target = config.TARGETS[target_name]
-        print(target)
 
     def show_vulns(self, target_name):
         """
@@ -65,6 +84,15 @@ class Commands(object):
                         cve_id, risk, msf, ares)
         print(s)
 
+    def shell(self, cmd):
+        """
+        Print response of shell command
+        """
+        output = os.popen(cmd).read()
+        print('\n    ' + 'shell response' + '\n    ' + '=' * 60)
+        for line in output.splitlines():
+            print('   ', line)
+
     def validip(self, ip_addr):
         """
         Return True if IP address is valid.
@@ -75,26 +103,13 @@ class Commands(object):
         except:
             return False
 
-    def scan(self, target_name, scan_type):
-        if scan_type == 'host':
-            config.MSFCOMMANDS.scan('host_scan', target_name)
-        if scan_type == 'os':
-            config.MSFCOMMANDS.scan('os_scan', target_name)
-        if scan_type == 'full':
-            config.MSFCOMMANDS.scan('full_scan', target_name)
-        scan_path = Path.cwd().glob('nessus_scans_tmp/' + target_name + '/' + scan_type + '*.csv')
-        for file in scan_path:
-            file_path = file
-        target = config.TARGETS[target_name]
-        self.scan_import(target_name, scan_type)
-
-    def scan_import(self, target_name, scan_type):
+    def scan_import(self, scan_type, target_name):
         scan_path = Path.cwd().glob('nessus_scans_tmp/' + target_name + '/' + scan_type + '*.csv')
         for file in scan_path:
             file_path = file
         target = config.TARGETS[target_name]
         target.import_scan(file_path)
-        self.update_vulns(target_name)
+        # self.update_vulns(target_name)
 
     def update_vulns(self, target_name):
         target = config.TARGETS[target_name]

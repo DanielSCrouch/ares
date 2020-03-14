@@ -25,7 +25,7 @@ class Planner(object):
     Launches JavaFF planner as a subprocess.
     """
 
-    def start_service(self):
+    def run(self):
         """
         Starts an os subprocess to start JavaFF.
         """
@@ -44,7 +44,7 @@ class Planner(object):
         out, err = process.communicate()
         if not err:
             print("[+] planner run, see output")
-            outpath = Path.cwd() / 'pddl_files' / 'plan.txt'
+            outpath = Path.cwd() / 'planning' / 'pddl_files' / 'plan.txt'
             outpath.write_text(out)
             return True
         else:

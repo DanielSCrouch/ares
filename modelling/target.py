@@ -17,9 +17,10 @@ class Target(object):
     """
     Model of a network target.
     """
-    def __init__(self, ip):
+    def __init__(self, name, ip):
+        self.name = name
         self.ip = ip
-        self.found = False
+        self.scanned = False
         self.tcp_ports = []
         self.udp_ports = []
         self.services = []
@@ -28,51 +29,51 @@ class Target(object):
         self.os = []
 
     def __str__(self):
-        string = '\n   ' + str("=" * 57)
+        string = '\n    ' + str("=" * 60)
         # Target
-        string += "\n\n   IP       : " + self.ip
+        string += "\n\n    IP:        " + self.ip
         # OS
         attribute = self.os
-        string += "\n\n   OpSystem : "
+        string += "\n\n    OpSystem:  "
         if len(attribute) >1:
             string += str(attribute[0])
             for item in attribute[1:min(5, len(attribute))]:
-                string += '\n              ' + str(item)
+                string += '\n               ' + str(item)
         # TCP Ports
-        string += "\n\n   TCP Ports: "
+        string += "\n\n    TCP Ports: "
         for item in self.tcp_ports[0:min(3, len(self.tcp_ports))]:
             string += item + ', '
-        string += '    ... total(' + str(len(self.tcp_ports)) + ')'
+        string += ' ... total(' + str(len(self.tcp_ports)) + ')'
         # UDP Ports
-        string += "\n   UDP Ports: "
+        string += "\n    UDP Ports: "
         for item in self.udp_ports[0:min(3, len(self.udp_ports))]:
             string += item + ', '
         string += ' ... total(' + str(len(self.udp_ports)) + ')'
         # Services
         attribute = self.services
-        string += "\n\n   Services : "
+        string += "\n\n    Services:  "
         if len(attribute) >1:
             string += str(attribute[0])
             for item in attribute[1:min(5, len(attribute))]:
-                string += '\n              ' + str(item)
+                string += '\n               ' + str(item)
             string += '\n              total(' + str(len(attribute)) + ')'
         # Vulnerabilities
         attribute = list(self.vulns.keys())
-        string += "\n\n   Vulns     : "
+        string += "\n\n    Vulns:     "
         if len(attribute) >1:
             string += str(attribute[0]) + ''
             for item in attribute[1:min(5, len(attribute))]:
-                string += '\n              ' + str(item)
-            string += '\n              total(' + str(len(attribute)) + ')'
+                string += '\n               ' + str(item)
+            string += '\n               total(' + str(len(attribute)) + ')'
         # Installed services
         attribute = self.installed_services
-        string += "\n\n   IServices: "
+        string += "\n\n    IServices: "
         if len(attribute) >1:
             string += str(attribute[0])
             for item in attribute[1:min(5, len(attribute))]:
-                string += '\n              ' + str(item)
-            string += '\n              total(' + str(len(attribute)) + ')'
-        string += "\n\n   " + str("=" * 57) + '\n'
+                string += '\n               ' + str(item)
+            string += '\n               total(' + str(len(attribute)) + ')'
+        string += "\n\n    " + str("=" * 60) + '\n'
         return string
 
     def import_scan(self, scan_path):
@@ -128,3 +129,5 @@ class Target(object):
                     if plugin == "20811":
                         is_list = installed_service_identifier.get_service(plugin_out)
                         self.installed_services = is_list
+        # set to scanned
+        self.scanned = True
