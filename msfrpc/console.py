@@ -91,12 +91,16 @@ class MsfConsole(Cmd):
                 if self.shell:
                     msf_data = msf_reply['data']
                     if self.shell_verbose:
-                        self.display(msf_data)
+                        print('\n\n' + str('=' *60))
+                        self.display('\n' + msf_data)
+                        print('\n\n' + str('=' *60))
+                        sys.stdout.write('\n' + self.prompt)
+                        sys.stdout.flush()
                 else:
                     print("[!] unexpected console data:")
                     self.display(str(msf_reply))
             self.msf_lock.release()
-            time.sleep(0.5)
+            time.sleep(1)
 
     def precmd(self, cmd):
         return Cmd.precmd(self, cmd)
@@ -121,11 +125,12 @@ class MsfConsole(Cmd):
         Write data to msf server without waiting for a response.
         """
         # send command
-        if cmd and not cmd.endswith('\n'):
-            cmd += '\n'
         if cmd:
+            cmd = cmd.strip() + '\n'
             opts = [self.cid, cmd]
             self.client.msf_callback(MsfRpcMethod.ConsoleWrite, opts)
+        if self.shell:
+            time.sleep(1)
 
     def msfread(self):
         """
@@ -182,22 +187,25 @@ class MsfConsole(Cmd):
         """
         Write msf response string to display console
         """
-        if self.shell_verbose:
-            print('\n*********************************************************\n')
+        if self.shell:
+            print('\n\n' + str('=' *60))
         cmd = cmd.replace('\x01', '')
         cmd = cmd.replace('\x02', '')
         cmd = cmd.replace('[*]', '[m]')
         cmd = cmd.rstrip()
         print(cmd)
-        if self.shell_verbose:
-            print('\n*********************************************************\n')
+        if self.shell:
+            print('\n\n' + str('=' *60))
 
     def default(self, cmd):
         """
         Default console command, defined by cmd superclass.
         """
-        self.callback(cmd)
-        print('\n')
+        if 'prompt' in cmd:
+            pass
+        else:
+            self.callback(cmd)
+            print('\n')
 
     def set_shell(self, shell=True):
         self.shell = shell
@@ -211,17 +219,13 @@ class MsfConsole(Cmd):
         Optional Arguments:
         - verbose: print to cmd by default, set to false to prevent print
         """
-        if self.shell:
-            self.msf_lock.acquire()
-            msf_data = self.msfwrite(cmd)
-            time.sleep(2)
-            self.msf_lock.release()
-            time.sleep(1)
-        else:
-            msf_data = self.write_read(cmd)['data']
-            if verbose:
-                self.display(msf_data)
-            return msf_data
+        msf_data = self.write_read(cmd)['data']
+        if verbose:
+            if msf_data.startswith(cmd.strip()):
+                # strip echoed commands
+                msf_data = msf_data.replace(cmd.strip(), '', 1)
+            self.display(msf_data)
+        return msf_data
 
     def sessionkill(self):
         """
