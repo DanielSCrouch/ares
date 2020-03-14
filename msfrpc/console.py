@@ -105,7 +105,7 @@ class MsfConsole(Cmd):
     def precmd(self, cmd):
         return Cmd.precmd(self, cmd)
 
-    def write_read(self, cmd=None):
+    def write_read(self, cmd=None, timeout=10):
         """
         Write and read data to/from the msf server, with prompt update.
         Returns msf console response.
@@ -114,7 +114,7 @@ class MsfConsole(Cmd):
         # send command
         self.msfwrite(cmd)
         # wait until console not busy
-        self.wait_busy()
+        self.wait_busy(timeout=timeout)
         # receive response
         msf_reply = self.msfread()
         self.msf_lock.release()
@@ -154,7 +154,7 @@ class MsfConsole(Cmd):
                 prompt = prompt.replace('\x02', '')
                 self.prompt = prompt.replace("msf5 >", "msf>>>")
 
-    def wait_busy(self):
+    def wait_busy(self, timeout=10):
         """
         Wait while the console is busy.
         """
@@ -162,10 +162,10 @@ class MsfConsole(Cmd):
         if self.check_busy():
             print('[*] msfconsole loading...')
         timer = 0
-        while self.check_busy() and timer < 10:
+        while self.check_busy() and timer < timeout:
             timer += 1
             time.sleep(1)
-        if self.check_busy() and timer == 10:
+        if self.check_busy() and timer == timeout:
             print('[!] msf console timeout: busy for >10s')
 
     def check_busy(self):
@@ -187,15 +187,16 @@ class MsfConsole(Cmd):
         """
         Write msf response string to display console
         """
-        if self.shell:
-            print('\n\n' + str('=' *60))
-        cmd = cmd.replace('\x01', '')
-        cmd = cmd.replace('\x02', '')
-        cmd = cmd.replace('[*]', '[m]')
-        cmd = cmd.rstrip()
-        print(cmd)
-        if self.shell:
-            print('\n\n' + str('=' *60))
+        if len(cmd) > 0:
+            if self.shell:
+                print('\n\n' + str('=' *60) +'\n')
+            cmd = cmd.replace('\x01', '')
+            cmd = cmd.replace('\x02', '')
+            cmd = cmd.replace('[*]', '[m]')
+            cmd = cmd.rstrip()
+            print(cmd)
+            if self.shell:
+                print('\n\n' + str('=' *60) +'\n')
 
     def default(self, cmd):
         """
@@ -213,13 +214,13 @@ class MsfConsole(Cmd):
     def set_shell_verbose(self, verbose=True):
         self.shell_verbose = verbose
 
-    def callback(self, cmd, verbose=True):
+    def callback(self, cmd, verbose=True, timeout=10):
         """
         Forward cmd to msfrpc console then record and display response.
         Optional Arguments:
         - verbose: print to cmd by default, set to false to prevent print
         """
-        msf_data = self.write_read(cmd)['data']
+        msf_data = self.write_read(cmd, timeout=timeout)['data']
         if verbose:
             if msf_data.startswith(cmd.strip()):
                 # strip echoed commands

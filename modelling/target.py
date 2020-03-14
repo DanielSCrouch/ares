@@ -28,7 +28,7 @@ class Target(object):
         self.os = []
 
     def __str__(self):
-        string = '\n   **********************************************'
+        string = '\n   ' + str("=" * 57)
         # Target
         string += "\n\n   IP       : " + self.ip
         # OS
@@ -72,7 +72,7 @@ class Target(object):
             for item in attribute[1:min(5, len(attribute))]:
                 string += '\n              ' + str(item)
             string += '\n              total(' + str(len(attribute)) + ')'
-        string += '\n\n   **********************************************\n'
+        string += "\n\n   " + str("=" * 57) + '\n'
         return string
 
     def import_scan(self, scan_path):
