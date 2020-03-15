@@ -20,9 +20,9 @@ class Console(Cmd):
 
     def __init__(self):
         super(Console, self).__init__()
-        config.COMMANDS.target('bruce', '10.91.251.103')
-        config.COMMANDS.target('nigel', '10.91.251.104')
-        config.COMMANDS.scan_import('full', 'bruce')
+        # config.COMMANDS.target('bruce', '10.91.251.103')
+        # config.COMMANDS.target('nigel', '10.91.251.104')
+        # config.COMMANDS.scan_import('full', 'bruce')
 
     ############################################
     # start
@@ -233,10 +233,19 @@ class Console(Cmd):
         """
         run exploit
         """
-        print("[+] Running exploit")
+        # command validation
+        cmds = cmd.split()
+        if len(cmds) != 2:
+            print("*** invalid number of arguments")
+            return
+        exploit = cmds[0]
+        target_name = cmds[1]
+        # command execution
         try:
-            config.MSFEXPLOITS.reverse_shell()
-            print("[+] complete")
+            if exploit == 'CVE-2008-4250':
+                config.INITIALACCESS.exploit_cve_2008_4250(target_name)
+            else:
+                pass
         except Exception as e:
             handle(e)
 

@@ -31,6 +31,26 @@ class Commands(object):
         print("[*] running planner")
         config.PLANNER.run()
         print("[*] plan complete")
+        print('\n    ' + 'plan' + '\n    ' + '=' * 60)
+        steps = []
+        outpath = Path.cwd() / 'planning' / 'pddl_files' / 'plan.txt'
+        plan = outpath.read_text()
+        lines = (line for line in plan.splitlines())
+        for line in lines:
+            if line.startswith('step'):
+                steps.append(line)
+                break
+        for line in lines:
+            if len(line.strip()) == 0:
+                break
+            else:
+                steps.append(line)
+        if len(steps) == 0:
+            print('something broke, see plan.txt')
+        else:
+            for step in steps:
+                print('   ', step)
+
 
     def target(self, name, ip, verbose=False):
         config.TARGETS[name] = Target(name, ip)

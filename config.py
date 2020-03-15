@@ -9,12 +9,12 @@ from plugins.nessus import Nessus
 from msfrpc.client import MsfClient
 from msfrpc.console import MsfConsole
 from msfrpc.commands import MsfCommands
-from msfrpc.exploits import MsfExploits
 from planning.planner import Planner
 from modelling.pddl_translator import PDDLTranslate
 from commands import Commands
 from playbook.host_scan import HostScan
 from playbook.full_scan import FullScan
+from playbook.initial_access import InitialAccess
 # main console
 CONSOLE = None
 # Plugin processes
@@ -27,10 +27,10 @@ MSFCLIENT = MsfClient()
 MSFCONSOLE = MsfConsole()
 MSFCOMMANDS = MsfCommands()
 PDDLTRANSLATE = PDDLTranslate()
-MSFEXPLOITS = MsfExploits()
 COMMANDS = Commands()
 HOSTSCAN = HostScan()
 FULLSCAN = FullScan()
+INITIALACCESS = InitialAccess()
 # Global variables
 TARGETS = {}
 NESSUS_DEF_DIR = os.getenv('NESSUS_DEF_DIR')

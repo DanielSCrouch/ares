@@ -19,7 +19,7 @@ class PDDLTranslate(object):
     Defines a collection of methods for translating models to PDDL problems.
     """
 
-    def generate_problem(self, depth=1):
+    def generate_problem(self, depth=2):
         """
         Generates a PDDL problem file for use with planner.
         - optional arguments:
@@ -51,7 +51,7 @@ class PDDLTranslate(object):
         p += "\n    placeholder - vuln"
         vulns = set()
         for target in config.TARGETS.values():
-            for vuln in target.vulns.keys():
+            for vuln in target.vulns.values():
                 vulns.add(vuln)
         for vuln in vulns:
             name = self.get_legal(vuln.cve_id)
@@ -64,14 +64,18 @@ class PDDLTranslate(object):
 
     def get_init(self, depth):
         p = "\n\n(:init"
-        p += " (ishost placeholder)"
+        p += " (is_host placeholder)"
         for target in config.TARGETS.values():
             name = self.get_legal(target.name)
             # add targets
-            p += "\n       (ishost " + name + ")"
-            # add found hosts
-            if target.scanned:
-                p += "\n       (scanned " + name + ")"
+            p += "\n       (is_host " + name + ")"
+            # add host scanned
+            # if target.scanned:
+            #     p += "\n       (scanned " + name + ")"
+            # add host vulns
+            for vuln in target.vulns.values():
+                vuln_name = self.get_legal(vuln.cve_id)
+                p += "\n       (has_" + vuln_name + " " + name + ")"
         p += "\n       )"
         return p
 

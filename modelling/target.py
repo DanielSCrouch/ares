@@ -25,7 +25,7 @@ class Target(object):
         self.udp_ports = []
         self.services = []
         self.installed_services = []
-        self.vulns = {}
+        self.vulns = {} # {cve_id: Vuln}
         self.os = []
 
     def __str__(self):
@@ -118,7 +118,7 @@ class Target(object):
                     if len(cve_id) > 3:
                         if cve_id not in self.vulns.keys():
                             v = Vuln(plugin, cve_id, cvss, protocol, port, risk)
-                            self.vulns[v] = v
+                            self.vulns[cve_id] = v
 
                     # identify and add OS
                     if plugin == "11936":
