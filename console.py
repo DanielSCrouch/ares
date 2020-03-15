@@ -20,9 +20,9 @@ class Console(Cmd):
 
     def __init__(self):
         super(Console, self).__init__()
-        # config.COMMANDS.target('bruce', '10.91.251.103')
-        # config.COMMANDS.target('nigel', '10.91.251.104')
-        # config.COMMANDS.scan_import('full', 'bruce')
+        config.COMMANDS.target('bruce', '10.91.251.103')
+        config.COMMANDS.target('nigel', '10.91.251.104')
+        config.COMMANDS.scan_import('full', 'bruce')
 
     ############################################
     # start
@@ -42,7 +42,7 @@ class Console(Cmd):
         # command execution
         try:
             print("[*] loading PostgreSQL plugin")
-            # config.DATABASE.start_service()
+            config.DATABASE.start_service()
             print("[*] PostgreSQL database now avaliable")
             print("[*] loading Metasploit plugin")
             config.METASPLOIT.start_service()
@@ -57,13 +57,13 @@ class Console(Cmd):
             config.MSFCONSOLE.connect(config.MSFCLIENT)
             print("[*] msf console now avaliable, see 'help msf'")
             print("[*] connecting msf commmand tool to msf console")
-            # config.MSFCOMMANDS.connect_nessus()
+            config.MSFCOMMANDS.connect_nessus()
             print("[*] Nessus now avaliable to msf")
             print("[*] connecting Metasploit to database")
-            # config.MSFCOMMANDS.connect_database()
+            config.MSFCOMMANDS.connect_database()
             print("[+] Metasploit connected to database")
             print("[+] setting up msf workspace")
-            # config.MSFCOMMANDS.set_workspace('default')
+            config.MSFCOMMANDS.set_workspace('default')
             print("[*] setup complete")
         except Exception as e:
             handle(e)
@@ -221,7 +221,7 @@ class Console(Cmd):
         execute planner.
         """
         try:
-            config.COMMANDS.plan()
+            config.COMMANDS.plan(verbose=True)
         except Exception as e:
             handle(e)
 
@@ -242,13 +242,20 @@ class Console(Cmd):
         target_name = cmds[1]
         # command execution
         try:
-            if exploit == 'CVE-2008-4250':
+            if exploit == 'cve-2008-4250':
                 config.INITIALACCESS.exploit_cve_2008_4250(target_name)
+            if exploit == 'msql_brute_force':
+                config.INITIALACCESS.exploit_msql_brute_force(target_name)
             else:
                 pass
         except Exception as e:
             handle(e)
 
+    def complete_exploit(self, text, line, begidx, endidx):
+        options = ['exploit_cve_2008_4250', 'msql_brute_force']
+        if text:
+            scan_opts = ([o for o in options if o.startswith(text)])
+        return scan_opts
 
 
     ############################################

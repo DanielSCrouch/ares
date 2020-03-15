@@ -21,35 +21,46 @@ class Commands(object):
     Defines a collection of MsfConsole commands.
     """
 
-    def plan(self, verbose=False):
+    def plan(self, depth=1, verbose=False):
+        """
+        Generate problem file and run planner.
+        """
+        outpath = Path.cwd() / 'planning' / 'pddl_files' / 'plan.txt'
+        steps = []
+        # require targets
         if len(config.TARGETS) == 0:
             print("no targets, see 'help target'")
             return
-        print("[*] generating problem file")
-        config.PDDLTRANSLATE.generate_problem()
-        print("[*] problem file complete")
-        print("[*] running planner")
-        config.PLANNER.run()
-        print("[*] plan complete")
-        print('\n    ' + 'plan' + '\n    ' + '=' * 60)
-        steps = []
-        outpath = Path.cwd() / 'planning' / 'pddl_files' / 'plan.txt'
-        plan = outpath.read_text()
-        lines = (line for line in plan.splitlines())
-        for line in lines:
-            if line.startswith('step'):
-                steps.append(line)
-                break
-        for line in lines:
-            if len(line.strip()) == 0:
+        # recall planner to find maximum depth
+        for d in range(1, depth+1):
+            print("[*] running planner at depth", d)
+            steps = []
+            config.PDDLTRANSLATE.generate_problem(depth=d)
+            config.PLANNER.run()
+            plan = outpath.read_text()
+            if 'plan' not in plan:
                 break
             else:
-                steps.append(line)
-        if len(steps) == 0:
-            print('something broke, see plan.txt')
-        else:
-            for step in steps:
-                print('   ', step)
+                # record plan
+                plan = outpath.read_text()
+                lines = (line for line in plan.splitlines())
+                for line in lines:
+                    if line.startswith('step'):
+                        steps.append(line)
+                        break
+                for line in lines:
+                    if len(line.strip()) == 0:
+                        break
+                    else:
+                        steps.append(line)
+        if verbose:
+            print("[*] planner resolved")
+            print('\n    ' + 'plan' + '\n    ' + '=' * 60)
+            if len(steps) == 0:
+                print('something broke, see plan.txt')
+            else:
+                for step in steps:
+                    print('   ', step)
 
 
     def target(self, name, ip, verbose=False):
@@ -124,7 +135,9 @@ class Commands(object):
             return False
 
     def scan_import(self, scan_type, target_name):
-        scan_path = Path.cwd().glob('nessus_scans_tmp/' + target_name + '/' + scan_type + '*.csv')
+        print(scan_type, target_name)
+        scan_name = scan_type + '_scan'
+        scan_path = Path.cwd().glob('nessus_scans_tmp/' + target_name + '/' + scan_name + '*.csv')
         for file in scan_path:
             file_path = file
         target = config.TARGETS[target_name]

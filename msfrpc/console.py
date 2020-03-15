@@ -105,7 +105,7 @@ class MsfConsole(Cmd):
     def precmd(self, cmd):
         return Cmd.precmd(self, cmd)
 
-    def write_read(self, cmd=None, timeout=10):
+    def write_read(self, cmd=None, timeout=10, wait=0):
         """
         Write and read data to/from the msf server, with prompt update.
         Returns msf console response.
@@ -114,7 +114,7 @@ class MsfConsole(Cmd):
         # send command
         self.msfwrite(cmd)
         # wait until console not busy
-        self.wait_busy(timeout=timeout)
+        self.wait_busy(timeout=timeout, wait=wait)
         # receive response
         msf_reply = self.msfread()
         self.msf_lock.release()
@@ -154,11 +154,17 @@ class MsfConsole(Cmd):
                 prompt = prompt.replace('\x02', '')
                 self.prompt = prompt.replace("msf5 >", "msf>>>")
 
-    def wait_busy(self, timeout=10):
+    def wait_busy(self, timeout=10, wait=0):
         """
         Wait while the console is busy.
         """
         time.sleep(0.1)
+        # wait for response
+        timer = 0
+        while timer < wait:
+            timer += 1
+            time.sleep(1)
+        # wait if busy
         if self.check_busy():
             print('[*] msfconsole loading...')
         timer = 0
@@ -214,13 +220,13 @@ class MsfConsole(Cmd):
     def set_shell_verbose(self, verbose=True):
         self.shell_verbose = verbose
 
-    def callback(self, cmd, verbose=True, timeout=10):
+    def callback(self, cmd, verbose=True, timeout=10, wait=0):
         """
         Forward cmd to msfrpc console then record and display response.
         Optional Arguments:
         - verbose: print to cmd by default, set to false to prevent print
         """
-        msf_data = self.write_read(cmd, timeout=timeout)['data']
+        msf_data = self.write_read(cmd, timeout=timeout, wait=wait)['data']
         if verbose:
             if msf_data.startswith(cmd.strip()):
                 # strip echoed commands

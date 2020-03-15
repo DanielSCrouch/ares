@@ -27,6 +27,8 @@ class Target(object):
         self.installed_services = []
         self.vulns = {} # {cve_id: Vuln}
         self.os = []
+        self.msql_username = ''
+        self.msql_password = ''
 
     def __str__(self):
         string = '\n    ' + str("=" * 60)
