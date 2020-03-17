@@ -19,6 +19,7 @@ class Target(object):
     """
     def __init__(self, name, ip):
         self.name = name
+        self.priv = ''
         self.ip = ip
         self.scanned = False
         self.tcp_ports = []

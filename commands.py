@@ -135,14 +135,15 @@ class Commands(object):
             return False
 
     def scan_import(self, scan_type, target_name):
-        print(scan_type, target_name)
         scan_name = scan_type + '_scan'
         scan_path = Path.cwd().glob('nessus_scans_tmp/' + target_name + '/' + scan_name + '*.csv')
         for file in scan_path:
             file_path = file
+        print(file_path)
         target = config.TARGETS[target_name]
         target.import_scan(file_path)
         # self.update_vulns(target_name)
+        print("[+]", target_name, "updated with", scan_type, "scan")
 
     def update_vulns(self, target_name):
         target = config.TARGETS[target_name]
@@ -163,8 +164,8 @@ class Commands(object):
             config.METASPLOIT.stop_service()
         if config.NESSUS:
             print("[*] closing Nessus subprocess")
-            config.NESSUS.stop_service()
+            # config.NESSUS.stop_service()
         if config.DATABASE:
             print("[*] closing PostgreSQL subprocess")
-            config.DATABASE.stop_service()
+            # config.DATABASE.stop_service()
         print("Application closed.")

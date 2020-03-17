@@ -91,9 +91,7 @@ class MsfConsole(Cmd):
                 if self.shell:
                     msf_data = msf_reply['data']
                     if self.shell_verbose:
-                        print('\n\n' + str('=' *60))
                         self.display('\n' + msf_data)
-                        print('\n\n' + str('=' *60))
                         sys.stdout.write('\n' + self.prompt)
                         sys.stdout.flush()
                 else:
@@ -160,10 +158,7 @@ class MsfConsole(Cmd):
         """
         time.sleep(0.1)
         # wait for response
-        timer = 0
-        while timer < wait:
-            timer += 1
-            time.sleep(1)
+        time.sleep(wait)
         # wait if busy
         if self.check_busy():
             print('[*] msfconsole loading...')
@@ -189,18 +184,22 @@ class MsfConsole(Cmd):
                 return console['busy']
         raise Exception("[!] Busy check, console not found.")
 
-    def display(self, cmd):
+    def display(self, string):
         """
         Write msf response string to display console
         """
-        if len(cmd) > 0:
+        if len(string) > 0:
             if self.shell:
                 print('\n\n' + str('=' *60) +'\n')
-            cmd = cmd.replace('\x01', '')
-            cmd = cmd.replace('\x02', '')
-            cmd = cmd.replace('[*]', '[m]')
-            cmd = cmd.rstrip()
-            print(cmd)
+            for line in string.splitlines():
+                line = line.replace('\x01', '')
+                line = line.replace('\x02', '')
+                line = line.replace('[*]', '[m]')
+                line = line.rstrip()
+                line = '    ' + line
+                if line.startswith('['):
+                    line = line.strip()
+                print(line)
             if self.shell:
                 print('\n\n' + str('=' *60) +'\n')
 
@@ -264,7 +263,7 @@ class MsfConsole(Cmd):
     def stop_polling(self):
         self.polling = False
 
-    def do_exit(self, cmd):
+    def do_cexit(self, cmd):
         """
         Exit the metasploit (msf) console
         """

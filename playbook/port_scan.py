@@ -10,7 +10,7 @@ import config
 # Generic Console Command Class - containing methods
 ################################################################################
 
-class FullScan(object):
+class PortScan(object):
     """
     Full scan
     """
@@ -19,9 +19,9 @@ class FullScan(object):
         """
         Scan an IP address with a given scan policy.
         """
-        scan_name = 'full_scan'
+        scan_name = 'port_scan'
         ip_addr = config.TARGETS[target_name].ip
-        uuid = config.FULL_SCAN_ID
+        uuid = config.PORT_SCAN_ID
         cmd = "nessus_scan_new "
         cmd += uuid + " "
         cmd += scan_name + " "

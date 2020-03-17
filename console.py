@@ -20,9 +20,9 @@ class Console(Cmd):
 
     def __init__(self):
         super(Console, self).__init__()
-        config.COMMANDS.target('bruce', '10.91.251.103')
-        config.COMMANDS.target('nigel', '10.91.251.104')
-        config.COMMANDS.scan_import('full', 'bruce')
+        config.COMMANDS.target('bruce', '192.168.1.190')
+        config.COMMANDS.target('nigel', '192.168.1.191')
+        # config.COMMANDS.scan_import('full', 'bruce')
 
     ############################################
     # start
@@ -75,7 +75,7 @@ class Console(Cmd):
     def do_scan(self, cmd):
         """
         Scan hosts.
-        Options: hosts, os, full
+        Options: host, port, full
         """
         # command validation
         cmds = cmd.split()
@@ -88,12 +88,14 @@ class Console(Cmd):
             if scan_type == 'hosts':
                 config.HOSTSCAN.scan(target_name, verbose=True)
             if scan_type == 'full':
-                config.FULLSCAN.scan(scan_name, target_name, verbose=True)
+                config.FULLSCAN.scan(scan_type, target_name, verbose=False)
+            if scan_type == 'port':
+                config.PORTSCAN.scan(scan_type, target_name, verbose=False)
         except Exception as e:
             handle(e)
 
     def complete_scan(self, text, line, begidx, endidx):
-        options = ['host', 'os', 'full']
+        options = ['host', 'port', 'full']
         if text:
             scan_opts = ([o for o in options if o.startswith(text)])
         return scan_opts
@@ -161,10 +163,12 @@ class Console(Cmd):
             return
         scan_type = cmds[0].strip()
         target_name = cmds[1].strip()
-        if scan_type not in ['full']:
+        if scan_type not in ['port', 'full']:
             print("*** invalid scan name, see 'help scan'")
+            return
         if target_name not in config.TARGETS.keys():
             print("*** target not known")
+            return
         # command execution
         try:
             config.COMMANDS.scan_import(scan_type, target_name)
@@ -244,19 +248,20 @@ class Console(Cmd):
         try:
             if exploit == 'cve-2008-4250':
                 config.INITIALACCESS.exploit_cve_2008_4250(target_name)
-            if exploit == 'msql_brute_force':
+            if exploit == 'msql-brute-force':
                 config.INITIALACCESS.exploit_msql_brute_force(target_name)
+            if exploit == 'priviledge-escalation':
+                config.PRIVILEDGEESC.escalate_priviledges(target_name)
             else:
                 pass
         except Exception as e:
             handle(e)
 
     def complete_exploit(self, text, line, begidx, endidx):
-        options = ['exploit_cve_2008_4250', 'msql_brute_force']
+        options = ['cve-2008-4250', 'msql-brute-force', 'priviledge-escalation']
         if text:
             scan_opts = ([o for o in options if o.startswith(text)])
         return scan_opts
-
 
     ############################################
     # generic console commands
@@ -264,7 +269,7 @@ class Console(Cmd):
 
     def default(self, cmd):
         if cmd == 'q':
-            return self.do_exit(cmd)
+            return self.do_cexit(cmd)
         if cmd == 's':
             self.do_setup(cmd)
         else:
@@ -286,7 +291,7 @@ class Console(Cmd):
     # exit process
     ############################################
 
-    def do_exit(self, cmd):
+    def do_cexit(self, cmd):
         """
         exit the application
         """
@@ -296,7 +301,7 @@ class Console(Cmd):
             handle(e)
         return True
 
-    do_EOF = do_exit # assign end-of-line to exit
+    do_EOF = do_cexit # assign end-of-line to exit
 
     ##################################################
 

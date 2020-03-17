@@ -38,6 +38,7 @@ class HostScan(object):
         output = output_stream.read()
         live_hosts = []
         for word in output.split():
+            word = word.replace('(','').replace(')','')
             search = "\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}"
             if re.match(search, word):
                 live_hosts.append(word)
