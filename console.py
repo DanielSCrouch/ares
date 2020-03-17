@@ -22,7 +22,7 @@ class Console(Cmd):
         super(Console, self).__init__()
         config.COMMANDS.target('bruce', '192.168.1.190')
         config.COMMANDS.target('nigel', '192.168.1.191')
-        # config.COMMANDS.scan_import('full', 'bruce')
+        config.COMMANDS.scan_import('full', 'bruce')
 
     ############################################
     # start
@@ -43,22 +43,22 @@ class Console(Cmd):
         try:
             print("[*] loading PostgreSQL plugin")
             config.DATABASE.start_service()
-            print("[*] PostgreSQL database now avaliable")
+            print("[+] PostgreSQL database now avaliable")
             print("[*] loading Metasploit plugin")
             config.METASPLOIT.start_service()
-            print("[*] Metasploit now avaliable")
+            print("[+] Metasploit now avaliable")
             print("[*] loading Nessus plugin")
             config.NESSUS.start_service()
-            print("[*] Nessus now avaliable")
+            print("[+] Nessus now avaliable")
             print("[*] logging into Metasploit via RPC")
             config.MSFCLIENT.login()
-            print("[*] Metasploit client login successfull")
+            print("[+] Metasploit client login successfull")
             print("[*] connecting msf console to Metasploit client")
             config.MSFCONSOLE.connect(config.MSFCLIENT)
-            print("[*] msf console now avaliable, see 'help msf'")
+            print("[+] msf console now avaliable, see 'help msf'")
             print("[*] connecting msf commmand tool to msf console")
             config.MSFCOMMANDS.connect_nessus()
-            print("[*] Nessus now avaliable to msf")
+            print("[+] Nessus now avaliable to msf")
             print("[*] connecting Metasploit to database")
             config.MSFCOMMANDS.connect_database()
             print("[+] Metasploit connected to database")
@@ -191,15 +191,17 @@ class Console(Cmd):
         """
         # command validation
         cmds = cmd.split()
-        if len(cmds) != 0:
+        if len(cmds) != 0 and len(cmds) != 1:
             print("*** invalid argument")
             return
         # command execution
+        if len(cmds) == 1:
+            cmd = cmds[0]
         try:
-            # config.MSFCONSOLE.prompt = 'msf' + self.prompt
-            config.MSFCONSOLE.prompt_update()
-            config.MSFCONSOLE.set_shell_verbose()
-            config.MSFCONSOLE.cmdloop()
+            if cmd and cmd == 'busy':
+                print(config.MSFCONSOLE.check_busy())
+            else:
+                config.MSFCONSOLE.open_console()
         except Exception as e:
             handle(e)
 
@@ -250,15 +252,17 @@ class Console(Cmd):
                 config.INITIALACCESS.exploit_cve_2008_4250(target_name)
             if exploit == 'msql-brute-force':
                 config.INITIALACCESS.exploit_msql_brute_force(target_name)
-            if exploit == 'priviledge-escalation':
-                config.PRIVILEDGEESC.escalate_priviledges(target_name)
+            if exploit == 'tokens':
+                config.PRIVILEDGEESC.tokens(target_name)
+            if exploit == 'cve-2011-2005':
+                config.PRIVILEDGEESC.exploit_cve_2011_2005(target_name)
             else:
                 pass
         except Exception as e:
             handle(e)
 
     def complete_exploit(self, text, line, begidx, endidx):
-        options = ['cve-2008-4250', 'msql-brute-force', 'priviledge-escalation']
+        options = ['cve-2008-4250', 'msql-brute-force', 'tokens', 'cve-2011-2005']
         if text:
             scan_opts = ([o for o in options if o.startswith(text)])
         return scan_opts

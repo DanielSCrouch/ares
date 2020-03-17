@@ -50,8 +50,8 @@ class MsfConsole(Cmd):
         self.cid = None
         self.msf_lock = Lock()
         self.polling = False
-        self.shell = False
-        self.shell_verbose = False
+        self.active_session = False
+        self.verbose = False
 
     def connect(self, client):
         """
@@ -60,6 +60,7 @@ class MsfConsole(Cmd):
         self.client = client
         # create a new msf console
         r = self.client.msf_callback(MsfRpcMethod.ConsoleCreate)
+        time.sleep(1)
         if 'id' in r:
             self.cid = r['id']
         else:
@@ -84,14 +85,14 @@ class MsfConsole(Cmd):
         while self.polling:
             self.msf_lock.acquire()
             msf_reply = self.msfread()
+            self.prompt_update(msf_reply)
             # if data, update prompt and display
             if 'data' in msf_reply.keys() and len(msf_reply['data']) > 0:
-                self.prompt_update(msf_reply)
-                # check if shell session
-                if self.shell:
+                # check if active session
+                if self.active_session:
                     msf_data = msf_reply['data']
-                    if self.shell_verbose:
-                        self.display('\n' + msf_data)
+                    if self.verbose:
+                        self.display(msf_data)
                         sys.stdout.write('\n' + self.prompt)
                         sys.stdout.flush()
                 else:
@@ -127,8 +128,6 @@ class MsfConsole(Cmd):
             cmd = cmd.strip() + '\n'
             opts = [self.cid, cmd]
             self.client.msf_callback(MsfRpcMethod.ConsoleWrite, opts)
-        if self.shell:
-            time.sleep(1)
 
     def msfread(self):
         """
@@ -160,22 +159,19 @@ class MsfConsole(Cmd):
         # wait for response
         time.sleep(wait)
         # wait if busy
-        if self.check_busy():
+        if self.check_busy() and not self.active_session:
             print('[*] msfconsole loading...')
-        timer = 0
-        while self.check_busy() and timer < timeout:
-            timer += 1
-            time.sleep(1)
-        if self.check_busy() and timer == timeout:
-            print('[!] msf console timeout: busy for >10s')
+            timer = 0
+            while self.check_busy() and timer < timeout:
+                timer += 1
+                time.sleep(1)
+            if self.check_busy() and timer == timeout:
+                print('[!] msf console timeout: busy for >10s')
 
     def check_busy(self):
         """
-        Checks if the console is busy. Return false if running shell.
+        Checks if the console is busy. Return false if running active shell.
         """
-        if self.shell:
-
-            return False
         msf_reply = self.client.msf_callback(MsfRpcMethod.ConsoleList)
         msf_consoles = msf_reply['consoles']
         for console in msf_consoles:
@@ -188,20 +184,26 @@ class MsfConsole(Cmd):
         """
         Write msf response string to display console
         """
+        string = string.strip()
         if len(string) > 0:
-            if self.shell:
-                print('\n\n' + str('=' *60) +'\n')
+            if self.verbose:
+                print('\n\n    ' + str('=' *60) +'\n')
             for line in string.splitlines():
                 line = line.replace('\x01', '')
                 line = line.replace('\x02', '')
                 line = line.replace('[*]', '[m]')
                 line = line.rstrip()
                 line = '    ' + line
-                if line.startswith('['):
+                if line.startswith('    [') and not self.verbose:
                     line = line.strip()
-                print(line)
-            if self.shell:
-                print('\n\n' + str('=' *60) +'\n')
+                print(line[0:60])
+                if len(line) > 60:
+                    line_count = int(len(line) / 60)
+                    for i in range(1,line_count +1):
+                        sub_line = line[(i*60):((i+1)*60)]
+                        print('    ' + sub_line)
+            if self.verbose:
+                print('\n\n    ' + str('=' *60) +'\n')
 
     def default(self, cmd):
         """
@@ -213,11 +215,26 @@ class MsfConsole(Cmd):
             self.callback(cmd)
             print('\n')
 
-    def set_shell(self, shell=True):
-        self.shell = shell
+    def set_active_session(self, active=True):
+        self.active_session = active
 
-    def set_shell_verbose(self, verbose=True):
-        self.shell_verbose = verbose
+    def open_session(self, target_name, verbose=False):
+        target = config.TARGETS[target_name]
+        self.set_active_session()
+        cmd = "sessions -i " + target.session_id
+        msf_reply = config.MSFCONSOLE.callback(cmd, verbose=verbose, wait=2)
+
+    def background_session(self, target_name, verbose=False):
+        target= config.TARGETS[target_name]
+        cmd = "background"
+        msf_reply = self.callback(cmd, verbose=verbose, wait=3)
+        cmd = "back"
+        msf_reply = self.callback(cmd, verbose=verbose, wait=1)
+        self.set_active_session(active = False)
+        print(msf_reply)
+
+    def set_verbose(self, verbose=True):
+        self.verbose = verbose
 
     def callback(self, cmd, verbose=True, timeout=10, wait=0):
         """
@@ -245,7 +262,7 @@ class MsfConsole(Cmd):
         """
         self.client.msf_callback(MsfRpcMethod.ConsoleSessionDetach, [self.cid])
 
-    def tabs(self, line):
+    def do_tabs(self, line):
         """
         Tab completion for console commands.
         Mandatory Arguments:
@@ -263,11 +280,21 @@ class MsfConsole(Cmd):
     def stop_polling(self):
         self.polling = False
 
+    def open_console(self):
+        """
+        Initialise and start console loop
+        """
+        self.prompt_update()
+        self.set_verbose()
+        self.set_active_session()
+        self.cmdloop()
+
     def do_cexit(self, cmd):
         """
         Exit the metasploit (msf) console
         """
-        self.set_shell_verbose(verbose=False)
+        self.set_verbose(verbose=False)
+        self.set_active_session(active=False)
         return True
 
 ################################################################################

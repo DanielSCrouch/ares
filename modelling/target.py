@@ -19,8 +19,9 @@ class Target(object):
     """
     def __init__(self, name, ip):
         self.name = name
-        self.priv = ''
         self.ip = ip
+        self.session_id = ''
+        self.priv = 'no access'
         self.scanned = False
         self.tcp_ports = []
         self.udp_ports = []
@@ -35,6 +36,8 @@ class Target(object):
         string = '\n    ' + str("=" * 60)
         # Target
         string += "\n\n    IP:        " + self.ip
+        # Priviledges
+        string += "\n\n    Privs:     " + self.priv 
         # OS
         attribute = self.os
         string += "\n\n    OpSystem:  "
