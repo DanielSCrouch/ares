@@ -17,6 +17,7 @@ from playbook.port_scan import PortScan
 from playbook.full_scan import FullScan
 from playbook.initial_access import InitialAccess
 from playbook.priviledge_escalation import PriviledgeEsc
+from playbook.traversal import Traversal
 # main console
 CONSOLE = None
 # Plugin processes
@@ -35,6 +36,7 @@ PORTSCAN = PortScan()
 FULLSCAN = FullScan()
 INITIALACCESS = InitialAccess()
 PRIVILEDGEESC = PriviledgeEsc()
+TRAVERSAL = Traversal()
 # Global variables
 TARGETS = {}
 NESSUS_DEF_DIR = os.getenv('NESSUS_DEF_DIR')

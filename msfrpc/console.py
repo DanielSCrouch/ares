@@ -222,12 +222,12 @@ class MsfConsole(Cmd):
         target = config.TARGETS[target_name]
         self.set_active_session()
         cmd = "sessions -i " + target.session_id
-        msf_reply = config.MSFCONSOLE.callback(cmd, verbose=verbose, wait=2)
+        msf_reply = config.MSFCONSOLE.callback(cmd, verbose=verbose, wait=1)
 
     def background_session(self, target_name, verbose=False):
         target= config.TARGETS[target_name]
         cmd = "background"
-        msf_reply = self.callback(cmd, verbose=verbose, wait=3)
+        msf_reply = self.callback(cmd, verbose=verbose, wait=1)
         cmd = "back"
         msf_reply = self.callback(cmd, verbose=verbose, wait=1)
         self.set_active_session(active = False)

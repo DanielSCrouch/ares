@@ -68,6 +68,10 @@ class Console(Cmd):
         except Exception as e:
             handle(e)
 
+        self.do_exploit('cve-2008-4250 bruce')
+        self.do_exploit('hashdump bruce')
+        self.do_exploit('psexec bruce nigel')
+
     ############################################
     # scan
     ############################################
@@ -241,11 +245,13 @@ class Console(Cmd):
         """
         # command validation
         cmds = cmd.split()
-        if len(cmds) != 2:
-            print("*** invalid number of arguments")
-            return
+        # if len(cmds) != 2:
+        #     print("*** invalid number of arguments")
+        #     return
         exploit = cmds[0]
         target_name = cmds[1]
+        if len(cmds) == 3:
+            target_name2 = cmds[2]
         # command execution
         try:
             if exploit == 'cve-2008-4250':
@@ -256,6 +262,10 @@ class Console(Cmd):
                 config.PRIVILEDGEESC.tokens(target_name)
             if exploit == 'cve-2011-2005':
                 config.PRIVILEDGEESC.exploit_cve_2011_2005(target_name)
+            if exploit == 'hashdump':
+                config.PRIVILEDGEESC.hashdump(target_name)
+            if exploit == 'psexec':
+                config.TRAVERSAL.psexec(target_name, target_name2)
             else:
                 pass
         except Exception as e:

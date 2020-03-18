@@ -22,6 +22,8 @@ class Target(object):
         self.ip = ip
         self.session_id = ''
         self.priv = 'no access'
+        self.admin_user = ''
+        self.admin_hash = ''
         self.scanned = False
         self.tcp_ports = []
         self.udp_ports = []
@@ -37,7 +39,7 @@ class Target(object):
         # Target
         string += "\n\n    IP:        " + self.ip
         # Priviledges
-        string += "\n\n    Privs:     " + self.priv 
+        string += "\n\n    Privs:     " + self.priv
         # OS
         attribute = self.os
         string += "\n\n    OpSystem:  "
