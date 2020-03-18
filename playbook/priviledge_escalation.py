@@ -38,18 +38,19 @@ class PriviledgeEsc(object):
         cmd = "getuid"
         msf_reply = config.MSFCONSOLE.callback(cmd, verbose=False)
         if 'AUTHORITY' in msf_reply:
-            target.priv = 'admin'
+            target.access = 'admin'
         else:
-            target.priv = 'user'
+            target.access = 'user'
         # background session
         config.MSFCONSOLE.background_session(target_name)
 
-    def tokens(self, target_name, verbose=True):
+    def exploit_tokens(self, target_name, verbose=True):
         """
         Escalate priviledges with meterpreter token methods
         """
         target = config.TARGETS[target_name]
-        original_priv = target.priv
+        target.action_history.append("exploit_tokens")
+        original_access = target.access
         if not target.session_id:
             raise Exception("shell session with target not active")
             return
@@ -61,9 +62,9 @@ class PriviledgeEsc(object):
         # attempt to update privs
         self.update_priviledes(target_name, verbose)
         if verbose:
-            current_priv = target.priv
-            if current_priv != original_priv:
-                print("[+] priviledge escalation:", original_priv, "=>", current_priv)
+            current_access = target.access
+            if current_access != original_access:
+                print("[+] priviledge escalation:", original_access, "=>", current_access)
                 return
             else:
                 print("[-] escalation via tokens failed ")
@@ -75,7 +76,8 @@ class PriviledgeEsc(object):
         Escalate priviledges with ms11_080 exploit
         """
         target = config.TARGETS[target_name]
-        original_priv = target.priv
+        target.action_history.append("exploit_cve_2011_2005")
+        original_access = target.access
         if not target.session_id:
             raise Exception("shell session with target not active")
             return
@@ -103,11 +105,12 @@ class PriviledgeEsc(object):
         # update user priviledges
         config.PRIVILEDGEESC.update_priviledes(target_name)
 
-    def hashdump(self, target_name, verbose=True):
+    def exploit_hashdump(self, target_name, verbose=True):
         """
         Collect administrator
         """
         target = config.TARGETS[target_name]
+        target.action_history.append("exploit_hashdump")
         if not target.session_id:
             raise Exception("shell session with target not active")
             return

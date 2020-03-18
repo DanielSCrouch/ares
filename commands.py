@@ -139,7 +139,6 @@ class Commands(object):
         scan_path = Path.cwd().glob('nessus_scans_tmp/' + target_name + '/' + scan_name + '*.csv')
         for file in scan_path:
             file_path = file
-        print(file_path)
         target = config.TARGETS[target_name]
         target.import_scan(file_path)
         # self.update_vulns(target_name)

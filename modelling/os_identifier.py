@@ -7,5 +7,6 @@ def get_os(plugin_output):
         if "one of these operating systems :" in line:
             break
     for line in lines:
-        os_list.append(line)
+        if 'Service Pack 3' in line:
+            os_list.append(line)
     return os_list

@@ -20,9 +20,9 @@ class Console(Cmd):
 
     def __init__(self):
         super(Console, self).__init__()
-        config.COMMANDS.target('bruce', '192.168.1.190')
-        config.COMMANDS.target('nigel', '192.168.1.191')
-        config.COMMANDS.scan_import('full', 'bruce')
+        # config.COMMANDS.target('bruce', '192.168.1.190')
+        # config.COMMANDS.target('nigel', '192.168.1.191')
+        # config.COMMANDS.scan_import('full', 'bruce')
 
     ############################################
     # start
@@ -67,10 +67,6 @@ class Console(Cmd):
             print("[*] setup complete")
         except Exception as e:
             handle(e)
-
-        self.do_exploit('cve-2008-4250 bruce')
-        self.do_exploit('hashdump bruce')
-        self.do_exploit('psexec bruce nigel')
 
     ############################################
     # scan
@@ -259,13 +255,13 @@ class Console(Cmd):
             if exploit == 'msql-brute-force':
                 config.INITIALACCESS.exploit_msql_brute_force(target_name)
             if exploit == 'tokens':
-                config.PRIVILEDGEESC.tokens(target_name)
+                config.PRIVILEDGEESC.exploit_tokens(target_name)
             if exploit == 'cve-2011-2005':
                 config.PRIVILEDGEESC.exploit_cve_2011_2005(target_name)
             if exploit == 'hashdump':
-                config.PRIVILEDGEESC.hashdump(target_name)
+                config.PRIVILEDGEESC.exploit_hashdump(target_name)
             if exploit == 'psexec':
-                config.TRAVERSAL.psexec(target_name, target_name2)
+                config.TRAVERSAL.exploit_psexec(target_name, target_name2)
             else:
                 pass
         except Exception as e:

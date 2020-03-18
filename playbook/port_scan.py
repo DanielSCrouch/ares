@@ -20,7 +20,9 @@ class PortScan(object):
         Scan an IP address with a given scan policy.
         """
         scan_name = 'port_scan'
-        ip_addr = config.TARGETS[target_name].ip
+        target = config.TARGETS[target_name]
+        target.port_scanned = True 
+        ip_addr = target.ip
         uuid = config.PORT_SCAN_ID
         cmd = "nessus_scan_new "
         cmd += uuid + " "

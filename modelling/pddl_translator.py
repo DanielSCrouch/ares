@@ -69,13 +69,34 @@ class PDDLTranslate(object):
             name = self.get_legal(target.name)
             # add targets
             p += "\n       (is_host " + name + ")"
-            # add host scanned
-            # if target.scanned:
-            #     p += "\n       (scanned " + name + ")"
+            # add session id
+            if target.session_id:
+                p += "\n       (has_session " + name + ")"
+            # add access level
+            access = self.get_legal(target.access)
+            p += "\n       (access_" + access + " " + name + ")"
+            # add os
+            os = self.get_legal(target.os)
+            p += "\n       (os_" + os + " " + name + ")"
+            # add port scanned
+            if target.port_scanned:
+                p += "\n       (port_scanned " + name + ")"
+            # add full scanned
+            if target.full_scanned:
+                p += "\n       (full_scanned " + name + ")"
+            # add tcp ports
+            for tcp_port in target.tcp_ports:
+                # tcp_port = self.get_legal(tcp_port)
+                p += "\n       (has_tcp_port_" + tcp_port + " " + name + ")"
             # add host vulns
             for vuln in target.vulns.values():
                 vuln_name = self.get_legal(vuln.cve_id)
                 p += "\n       (has_" + vuln_name + " " + name + ")"
+            # add previously completed actions
+            for action in target.action_history:
+                action_name = self.get_legal(action)
+                p += "\n       (hist_" + action_name + " " + name + ")"
+
         p += "\n       )"
         return p
 
@@ -99,4 +120,5 @@ class PDDLTranslate(object):
             name = 'xx' + name
         name = name.replace('.', '_')
         name = name.replace('-', '_')
+        name = name.replace(' ', '_')
         return name

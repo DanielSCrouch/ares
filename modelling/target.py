@@ -21,25 +21,28 @@ class Target(object):
         self.name = name
         self.ip = ip
         self.session_id = ''
-        self.priv = 'no access'
-        self.admin_user = ''
-        self.admin_hash = ''
-        self.scanned = False
+        self.access = 'no access'
+        self.os = 'unknown'
+        self.full_scanned = False
+        self.port_scanned = False
         self.tcp_ports = []
         self.udp_ports = []
         self.services = []
         self.installed_services = []
         self.vulns = {} # {cve_id: Vuln}
-        self.os = []
+        self.admin_user = ''
+        self.admin_hash = ''
         self.msql_username = ''
         self.msql_password = ''
+        # actions completed
+        self.action_history = []
 
     def __str__(self):
         string = '\n    ' + str("=" * 60)
         # Target
         string += "\n\n    IP:        " + self.ip
         # Priviledges
-        string += "\n\n    Privs:     " + self.priv
+        string += "\n\n    Access:    " + self.access
         # OS
         attribute = self.os
         string += "\n\n    OpSystem:  "
@@ -131,7 +134,7 @@ class Target(object):
                     # identify and add OS
                     if plugin == "11936":
                         os_list = os_identifier.get_os(plugin_out)
-                        self.os = os_list
+                        self.os = os_list[0] # assumes first is correct!
 
                     # identify and add installed services (credential access)
                     if plugin == "20811":
