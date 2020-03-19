@@ -9,6 +9,7 @@
 						 (access_no_access													?x - host)
 						 (access_user																?x - host)
 						 (access_admin															?x - host)
+						 (has_admin_hash														?x - host)
 						 (os_unknown     														?x - host)
 						 (os_microsoft_windows_xp_service_pack_3		?x - host)
 						 (os_microsoft_windows_xp_service_pack_2		?x - host)
@@ -48,6 +49,7 @@
 						 (hist_exploit_tokens												?x - host)
 						 (hist_exploit_cve_2011_2005								?x - host)
 						 (hist_exploit_hashdump											?x - host)
+						 (hist_exploit_psexec												?x - host)
 						 (has_progress1		  												?x - target)
 						 (has_progress2     												?x - target))
 
@@ -75,7 +77,8 @@
 												 (not (hist_exploit_cve_2008_4250 ?x)))
  	:effect      		  (and (not (access_no_access ?x))
 												 (access_admin ?x)
- 									  		 (has_progress1 ?x))
+												 (hist_exploit_cve_2008_4250 ?x)
+												 (has_progress1 ?x))
 										)
 
 (:action exploit_msql_brute_force
@@ -87,17 +90,53 @@
 												 (not (hist_exploit_msql_brute_force ?x)))
  	:effect      		  (and (not (access_no_access ?x))
 												 (access_user ?x)
+												 (hist_exploit_msql_brute_force ?x)
  									  		 (has_progress1 ?x))
 										)
 
 (:action exploit_tokens
  	:parameters   		(?x - host)
  	:precondition 		(and (access_user ?x)
- 									  		 (or (has_tcp_port_139 ?x)
-												 		 (has_tcp_port_445 ?x))
-												 (not (hist_exploit_msql_brute_force ?x)))
- 	:effect      		  (and (is_host ?x)
+ 									  		 (has_session ?x)
+												 (not (hist_exploit_tokens ?x)))
+ 	:effect      		  (and (access_admin ?x)
+												 (hist_exploit_tokens ?x)
  									  		 (has_progress1 ?x))
+										)
+
+(:action exploit_cve_2011_2005
+ 	:parameters   		(?x - host)
+ 	:precondition 		(and (access_user ?x)
+ 									  		 (has_session ?x)
+												 (not (hist_exploit_cve_2011_2005 ?x)))
+ 	:effect      		  (and (access_admin ?x)
+												 (hist_exploit_cve_2011_2005 ?x)
+ 									  		 (has_progress1 ?x))
+										)
+
+(:action exploit_hashdump
+ 	:parameters   		(?x - host)
+ 	:precondition 		(and (has_session ?x)
+												 (access_admin ?x)
+												 (not (has_admin_hash ?x))
+												 (not (hist_exploit_hashdump ?x)))
+ 	:effect      		  (and (has_admin_hash ?x)
+												 (hist_exploit_hashdump ?x)
+ 									  		 (has_progress1 ?x))
+										)
+
+(:action exploit_psexec
+ 	:parameters   		(?x - host ?y - host)
+ 	:precondition 		(and (has_session ?y)
+												 (access_admin ?x)
+												 (has_admin_hash ?x)
+												 (not (access_admin ?y))
+												 (not (has_admin_hash ?y))
+												 (not (hist_exploit_psexec ?y)))
+ 	:effect      		  (and (has_admin_hash ?y)
+												 (access_admin ?y)
+												 (hist_exploit_psexec ?y)
+ 									  		 (has_progress1 ?y))
 										)
 
 )

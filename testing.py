@@ -104,6 +104,7 @@ def plan6_test():
     with redirect_stdout(f):
         ###
         config.TARGETS['bruce'].action_history.append("exploit_msql_brute_force")
+        config.TARGETS['bruce'].session_id = '1'
         config.TARGETS['bruce'].access = 'user'
         CONSOLE.do_plan('')
         ###
@@ -115,7 +116,20 @@ def plan7_test():
     with redirect_stdout(f):
         ###
         config.TARGETS['bruce'].action_history.append("exploit_cve_2008_4250")
+        config.TARGETS['bruce'].session_id = '1'
         config.TARGETS['bruce'].access = 'admin'
+        CONSOLE.do_plan('')
+        ###
+    s = f.getvalue()
+    print(s)
+
+def plan8_test():
+    f = io.StringIO()
+    with redirect_stdout(f):
+        ###
+        config.TARGETS['bruce'].action_history.append("exploit_hashdump")
+        config.TARGETS['bruce'].admin_user = "Administrator"
+        config.TARGETS['bruce'].admin_hash = "123123123"
         CONSOLE.do_plan('')
         ###
     s = f.getvalue()
@@ -166,3 +180,6 @@ if __name__ == '__main__':
     time.sleep(1)
     print("test11: plan7 test \n" + "*" * 60 )
     plan7_test()
+    time.sleep(1)
+    print("test12: plan8 test \n" + "*" * 60 )
+    plan8_test()

@@ -92,6 +92,9 @@ class PDDLTranslate(object):
             for vuln in target.vulns.values():
                 vuln_name = self.get_legal(vuln.cve_id)
                 p += "\n       (has_" + vuln_name + " " + name + ")"
+            # add admin (smb exploit)
+            if target.admin_hash:
+                p += "\n       (has_admin_hash " + name + ")"
             # add previously completed actions
             for action in target.action_history:
                 action_name = self.get_legal(action)

