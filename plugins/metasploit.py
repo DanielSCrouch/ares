@@ -44,6 +44,9 @@ class Metasploit(object):
                                    universal_newlines = True, \
                                    shell=True,                \
                                    bufsize=0)
+
+        for line in popen.stdout: 
+            print(line.decode())
         time.sleep(10)
 
         cmd = "load msgrpc"

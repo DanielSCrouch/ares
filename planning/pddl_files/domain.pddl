@@ -6,6 +6,7 @@
 
 (:predicates (is_host           												?x - host)
 						 (has_session																?x - host)
+						 (has_initial_access												?x - host)
 						 (access_no_access													?x - host)
 						 (access_user																?x - host)
 						 (access_admin															?x - host)
@@ -79,6 +80,7 @@
 												 (access_admin ?x)
 												 (hist_exploit_cve_2008_4250 ?x)
 												 (has_progress1 ?x))
+												 (has_initial_access ?x)
 										)
 
 (:action exploit_msql_brute_force

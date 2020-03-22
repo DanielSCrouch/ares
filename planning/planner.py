@@ -63,5 +63,5 @@ class Planner(object):
 
 if __name__ == '__main__':
     planner = Planner()
-    planner.start_service()
+    planner.run()
     # planner.generate_problem()
