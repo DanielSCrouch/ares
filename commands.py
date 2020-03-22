@@ -57,7 +57,7 @@ class Commands(object):
             print("[*] planner resolved")
             print('\n    ' + 'plan' + '\n    ' + '=' * 60)
             if len(steps) == 0:
-                print('something broke, see plan.txt')
+                print('[!] planning error, see plan.txt')
             else:
                 for step in steps:
                     print('   ', step)

@@ -8,7 +8,11 @@ import subprocess
 # Generic Console Command Class - containing methods
 ################################################################################
 
+<<<<<<< HEAD
 class Recon(object):
+=======
+class Scan(object):
+>>>>>>> 8f9b0f6443ee275d55c12f3c51651cd0dd49fc1f
     """
     Defines a collection of scan methods.
     """
