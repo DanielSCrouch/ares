@@ -85,12 +85,13 @@ class Console(Cmd):
         scan_type = cmds[0].strip()
         target_name = cmds[1].strip()
         try:
-            if scan_type == 'hosts':
-                config.HOSTSCAN.scan(target_name, verbose=True)
-            if scan_type == 'full':
-                config.FULLSCAN.scan(scan_type, target_name, verbose=False)
+            if scan_type == 'host':
+                config.RECON.host_scan(target_name, verbose=True)
             if scan_type == 'port':
-                config.PORTSCAN.scan(scan_type, target_name, verbose=False)
+                config.RECON.port_scan(scan_type, target_name, verbose=False)
+            if scan_type == 'full':
+                config.RECON.full_scan(scan_type, target_name, verbose=False)
+
         except Exception as e:
             handle(e)
 

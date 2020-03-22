@@ -12,9 +12,7 @@ from msfrpc.commands import MsfCommands
 from planning.planner import Planner
 from modelling.pddl_translator import PDDLTranslate
 from commands import Commands
-from playbook.host_scan import HostScan
-from playbook.port_scan import PortScan
-from playbook.full_scan import FullScan
+from playbook.recon import Recon
 from playbook.initial_access import InitialAccess
 from playbook.priviledge_escalation import PriviledgeEsc
 from playbook.traversal import Traversal
@@ -31,9 +29,7 @@ MSFCONSOLE = MsfConsole()
 MSFCOMMANDS = MsfCommands()
 PDDLTRANSLATE = PDDLTranslate()
 COMMANDS = Commands()
-HOSTSCAN = HostScan()
-PORTSCAN = PortScan()
-FULLSCAN = FullScan()
+RECON = Recon()
 INITIALACCESS = InitialAccess()
 PRIVILEDGEESC = PriviledgeEsc()
 TRAVERSAL = Traversal()
