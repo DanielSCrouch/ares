@@ -5,6 +5,7 @@ import time
 import traceback
 from cmd import Cmd
 
+
 # local imports
 import config
 
@@ -17,13 +18,10 @@ class Console(Cmd):
     with open('misc/intro.txt', 'r') as f:
         intro = f.read()
 
-    def do_test(self, cmd):
-        self.do_target("bruce 172.16.231.130")
-        self.do_target("nigel 172.16.231.131")
-        self.do_import("port bruce")
-        self.do_import("full bruce")
-        self.do_import("port nigel")
-        self.do_import("full nigel")
+    def __init__(self):
+        Cmd.__init__(self)
+        # console hook
+        config.CONSOLE = self
 
     ############################################
     # start
@@ -33,8 +31,6 @@ class Console(Cmd):
         """
         Setup services avaliable to console.
         """
-        # console hook
-        config.CONSOLE = self
         # command validation
         cmds = cmd.split()
         if len(cmds) != 0:
@@ -310,6 +306,26 @@ class Console(Cmd):
 
     do_EOF = do_cexit # assign end-of-line to exit
 
+    ############################################
+    # testing
+    ############################################
+
+    def do_test(self, cmd):
+        """
+        Unit tests
+        Options:
+        - test 1    : setup
+        - test 2    : live host scan
+        - test 3    : host targetting
+        - test 4    : port scan
+        - test 5    : import scan (port and full)
+        - test 6    : planning (initial access)
+        """
+        try:
+            config.TESTS.test(cmd)
+        except Exception as e:
+            handle(e)
+
     ##################################################
 
 ################################################################################
@@ -317,6 +333,7 @@ class Console(Cmd):
 ################################################################################
 
 def handle(exception):
+    print("[!] Exception Error")
     print(exception)
     track = traceback.format_exc()
     print(track)

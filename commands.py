@@ -21,37 +21,39 @@ class Commands(object):
     """
     Defines a collection of MsfConsole commands.
     """
+    def __init__(self):
+        self.setup_complete = False
 
     def setup(self):
         """
         Sets up Ares environment including plugins and module connections
         """
-        config.ACTIVE = True
-        self.loading_check()
-        print("\r[*] loading PostgreSQL plugin")
-        config.DATABASE.start_service()
-        print("\r[+] PostgreSQL database now avaliable")
-        print("\r[*] loading Metasploit plugin")
-        config.METASPLOIT.start_service()
-        print("\r[+] Metasploit now avaliable")
-        print("\r[*] loading Nessus plugin")
-        config.NESSUS.start_service()
-        print("\r[+] Nessus now avaliable")
-        print("\r[*] logging into Metasploit via RPC")
-        config.MSFCLIENT.login()
-        print("\r[+] Metasploit client login successfull")
-        print("\r[*] connecting msf console to Metasploit client")
-        config.MSFCONSOLE.connect(config.MSFCLIENT)
-        print("\r[+] msf console now avaliable, see 'help msf'")
-        print("\r[*] connecting msf commmand tool to msf console")
-        config.MSFCOMMANDS.connect_nessus()
-        print("\r[+] Nessus now avaliable to msf")
-        print("\r[*] connecting Metasploit to database")
-        config.MSFCOMMANDS.connect_database()
-        print("\r[+] Metasploit connected to database")
-        print("\r[+] setting up msf workspace")
-        config.MSFCOMMANDS.set_workspace()
-        print("\r[*] setup complete")
+        if not self.setup_complete:
+            print("\r[*] loading PostgreSQL plugin")
+            config.DATABASE.start_service()
+            print("\r[+] PostgreSQL database now avaliable")
+            print("\r[*] loading Metasploit plugin")
+            config.METASPLOIT.start_service()
+            print("\r[+] Metasploit now avaliable")
+            print("\r[*] loading Nessus plugin")
+            config.NESSUS.start_service()
+            print("\r[+] Nessus now avaliable")
+            print("\r[*] logging into Metasploit via RPC")
+            config.MSFCLIENT.login()
+            print("\r[+] Metasploit client login successfull")
+            print("\r[*] connecting msf console to Metasploit client")
+            config.MSFCONSOLE.connect(config.MSFCLIENT)
+            print("\r[+] msf console now avaliable, see 'help msf'")
+            print("\r[*] connecting msf commmand tool to msf console")
+            config.MSFCOMMANDS.connect_nessus()
+            print("\r[+] Nessus now avaliable to msf")
+            print("\r[*] connecting Metasploit to database")
+            config.MSFCOMMANDS.connect_database()
+            print("\r[+] Metasploit connected to database")
+            print("\r[+] setting up msf workspace")
+            config.MSFCOMMANDS.set_workspace()
+            print("\r[*] setup complete")
+            self.setup_complete = True
 
     def plan(self, depth=1, verbose=False):
         """
@@ -199,7 +201,6 @@ class Commands(object):
         """
         Close application, plugins and connections
         """
-        config.ACTIVE = False
         if config.MSFCONSOLE:
             print("\r[*] stopping msfconsole")
             config.MSFCONSOLE.stop_polling()
@@ -216,36 +217,3 @@ class Commands(object):
             print("\r[*] closing PostgreSQL subprocess")
             # config.DATABASE.stop_service()
         print("\n[*] Application closed.")
-
-    def loading_check(self):
-        """
-        Starting loading prompt thread
-        """
-        Thread(target=self.loading_thread).start()
-
-    def loading_thread(self):
-        while config.ACTIVE:
-            time.sleep(0.2)
-            if config.LOADING:
-                print('\r[|] ', end='', flush=True)
-                time.sleep(0.2)
-            if config.LOADING:
-                print('\r[/] ', end='', flush=True)
-                time.sleep(0.2)
-            if config.LOADING:
-                print('\r[—] ', end='', flush=True)
-                time.sleep(0.1)
-            if config.LOADING:
-                print('\r[\\] ', end='', flush=True)
-                time.sleep(0.2)
-            if config.LOADING:
-                print('\r[|] ', end='', flush=True)
-                time.sleep(0.2)
-            if config.LOADING:
-                print('\r[/] ', end='', flush=True)
-                time.sleep(0.2)
-            if config.LOADING:
-                print('\r[—] ', end='', flush=True)
-                time.sleep(0.1)
-            if config.LOADING:
-                print('\r[\\] ', end='', flush=True)

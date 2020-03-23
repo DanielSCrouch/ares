@@ -1,5 +1,6 @@
 import csv
 import glob
+import time
 from pathlib import Path
 #
 import config
@@ -17,6 +18,8 @@ class ScanImport(object):
         Function to import Nessus CSV report to Target
         """
         target = config.TARGETS[target_name]
+        config.LOADING = True
+        time.sleep(2)
         with open(scan_path, newline='') as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
@@ -67,6 +70,7 @@ class ScanImport(object):
                         is_list = self.get_service(plugin_out)
                         target.installed_services = is_list
         # set to scanned
+        config.LOADING = False
         target.full_scan = True
 
     def import_port_scan(self, target_name, scan_path):
@@ -74,6 +78,8 @@ class ScanImport(object):
         Function to import Nessus port scan CSV report to Target
         """
         target = config.TARGETS[target_name]
+        config.LOADING = True
+        time.sleep(2)
         with open(scan_path, newline='') as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
@@ -97,6 +103,7 @@ class ScanImport(object):
                             target.udp_ports.append(port)
 
         # set to scanned
+        config.LOADING = False
         target.port_scan = True
 
     def get_os(self, plugin_output):
