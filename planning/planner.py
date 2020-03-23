@@ -43,7 +43,6 @@ class Planner(object):
         process.wait(5)
         out, err = process.communicate()
         if not err:
-            print("[+] planner run, see output")
             outpath = Path.cwd() / 'planning' / 'pddl_files' / 'plan.txt'
             outpath.write_text(out)
             return True

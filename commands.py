@@ -8,6 +8,7 @@ import time
 import ipaddress
 import subprocess
 from pathlib import Path
+from threading import Thread
 from modelling.target import Target
 # global variables
 import config
@@ -21,6 +22,37 @@ class Commands(object):
     Defines a collection of MsfConsole commands.
     """
 
+    def setup(self):
+        """
+        Sets up Ares environment including plugins and module connections
+        """
+        config.ACTIVE = True
+        self.loading_check()
+        print("\r[*] loading PostgreSQL plugin")
+        config.DATABASE.start_service()
+        print("\r[+] PostgreSQL database now avaliable")
+        print("\r[*] loading Metasploit plugin")
+        config.METASPLOIT.start_service()
+        print("\r[+] Metasploit now avaliable")
+        print("\r[*] loading Nessus plugin")
+        config.NESSUS.start_service()
+        print("\r[+] Nessus now avaliable")
+        print("\r[*] logging into Metasploit via RPC")
+        config.MSFCLIENT.login()
+        print("\r[+] Metasploit client login successfull")
+        print("\r[*] connecting msf console to Metasploit client")
+        config.MSFCONSOLE.connect(config.MSFCLIENT)
+        print("\r[+] msf console now avaliable, see 'help msf'")
+        print("\r[*] connecting msf commmand tool to msf console")
+        config.MSFCOMMANDS.connect_nessus()
+        print("\r[+] Nessus now avaliable to msf")
+        print("\r[*] connecting Metasploit to database")
+        config.MSFCOMMANDS.connect_database()
+        print("\r[+] Metasploit connected to database")
+        print("\r[+] setting up msf workspace")
+        config.MSFCOMMANDS.set_workspace()
+        print("\r[*] setup complete")
+
     def plan(self, depth=1, verbose=False):
         """
         Generate problem file and run planner.
@@ -33,7 +65,7 @@ class Commands(object):
             return
         # recall planner to find maximum depth
         for d in range(1, depth+1):
-            print("[*] running planner at depth", d)
+            print("\r[*] running planner at depth", d)
             steps = []
             config.PDDLTRANSLATE.generate_problem(depth=d)
             config.PLANNER.run()
@@ -54,16 +86,19 @@ class Commands(object):
                     else:
                         steps.append(line)
         if verbose:
-            print("[*] planner resolved")
+            print("\r[*] planner resolved")
             print('\n    ' + 'plan' + '\n    ' + '=' * 60)
             if len(steps) == 0:
-                print('[!] planning error, see plan.txt')
+                print('\r[!] planning error, see plan.txt')
             else:
                 for step in steps:
                     print('   ', step)
 
 
     def target(self, name, ip, verbose=False):
+        """
+        Track a target
+        """
         config.TARGETS[name] = Target(name, ip)
         # display output
         if verbose:
@@ -135,16 +170,25 @@ class Commands(object):
             return False
 
     def scan_import(self, scan_type, target_name):
+        """
+        Import a Nessus CSV scan report to a target
+        """
         scan_name = scan_type + '_scan'
         scan_path = Path.cwd().glob('nessus_scans_tmp/' + target_name + '/' + scan_name + '*.csv')
         for file in scan_path:
             file_path = file
         target = config.TARGETS[target_name]
-        target.import_scan(file_path)
+        if scan_type == 'port':
+            config.SCANIMPORT.import_port_scan(target_name, file_path)
+        if scan_type == 'full':
+            config.SCANIMPORT.import_full_scan(target_name, file_path)
         # self.update_vulns(target_name)
-        print("[+]", target_name, "updated with", scan_type, "scan")
+        print("\r[+]", target_name, "updated with", scan_type, "scan")
 
     def update_vulns(self, target_name):
+        """
+        Check vulnerabilities for matching Metasploit exploit
+        """
         target = config.TARGETS[target_name]
         for vuln in target.vulns.values():
             vuln_id = vuln.cve_id
@@ -152,19 +196,56 @@ class Commands(object):
             vuln.msf_modules = msfexploits
 
     def exit(self):
+        """
+        Close application, plugins and connections
+        """
+        config.ACTIVE = False
         if config.MSFCONSOLE:
-            print("[*] stopping msfconsole")
+            print("\r[*] stopping msfconsole")
             config.MSFCONSOLE.stop_polling()
         if config.MSFCLIENT:
-            print("[*] closing msfclient connection")
+            print("\r[*] closing msfclient connection")
             config.MSFCLIENT.close_connection()
         if config.METASPLOIT:
-            print("[*] closing metasploit sub-process")
+            print("\r[*] closing metasploit sub-process")
             config.METASPLOIT.stop_service()
         if config.NESSUS:
-            print("[*] closing Nessus subprocess")
+            print("\r[*] closing Nessus subprocess")
             # config.NESSUS.stop_service()
         if config.DATABASE:
-            print("[*] closing PostgreSQL subprocess")
+            print("\r[*] closing PostgreSQL subprocess")
             # config.DATABASE.stop_service()
-        print("Application closed.")
+        print("\n[*] Application closed.")
+
+    def loading_check(self):
+        """
+        Starting loading prompt thread
+        """
+        Thread(target=self.loading_thread).start()
+
+    def loading_thread(self):
+        while config.ACTIVE:
+            time.sleep(0.2)
+            if config.LOADING:
+                print('\r[|] ', end='', flush=True)
+                time.sleep(0.2)
+            if config.LOADING:
+                print('\r[/] ', end='', flush=True)
+                time.sleep(0.2)
+            if config.LOADING:
+                print('\r[—] ', end='', flush=True)
+                time.sleep(0.1)
+            if config.LOADING:
+                print('\r[\\] ', end='', flush=True)
+                time.sleep(0.2)
+            if config.LOADING:
+                print('\r[|] ', end='', flush=True)
+                time.sleep(0.2)
+            if config.LOADING:
+                print('\r[/] ', end='', flush=True)
+                time.sleep(0.2)
+            if config.LOADING:
+                print('\r[—] ', end='', flush=True)
+                time.sleep(0.1)
+            if config.LOADING:
+                print('\r[\\] ', end='', flush=True)

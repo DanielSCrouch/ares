@@ -71,7 +71,7 @@ class MsfCommands(object):
         if POSTGRES_DB_NAME not in msf_reply:
             raise Exception("[!] unable to connect to database \n")
 
-    def set_workspace(self, workspace_name):
+    def set_workspace(self, workspace_name=MSF_WORKSPACE_DEFAULT):
         """
         Change workspace within Metasploit, create new if not already avaliable.
         """

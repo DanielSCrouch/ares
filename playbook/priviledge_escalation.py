@@ -8,12 +8,6 @@ from dotenv import load_dotenv
 # global variables
 import config
 
-################################################################################
-# Envionment variable imports (API Keys etc)
-################################################################################
-
-load_dotenv()
-# MSF_LHOST = os.getenv('MSF_LHOST')
 
 ################################################################################
 # Priviledge Escalation commands

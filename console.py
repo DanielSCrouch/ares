@@ -8,7 +8,6 @@ from cmd import Cmd
 # local imports
 import config
 
-
 ################################################################################
 # Main ARES Console
 ################################################################################
@@ -18,11 +17,13 @@ class Console(Cmd):
     with open('misc/intro.txt', 'r') as f:
         intro = f.read()
 
-    def __init__(self):
-        super(Console, self).__init__()
-        # config.COMMANDS.target('bruce', '192.168.1.190')
-        # config.COMMANDS.target('nigel', '192.168.1.191')
-        # config.COMMANDS.scan_import('full', 'bruce')
+    def do_test(self, cmd):
+        self.do_target("bruce 172.16.231.130")
+        self.do_target("nigel 172.16.231.131")
+        self.do_import("port bruce")
+        self.do_import("full bruce")
+        self.do_import("port nigel")
+        self.do_import("full nigel")
 
     ############################################
     # start
@@ -36,35 +37,12 @@ class Console(Cmd):
         config.CONSOLE = self
         # command validation
         cmds = cmd.split()
-        if len(cmds) != 1:
+        if len(cmds) != 0:
             print("*** invalid number of arguments")
             return
         # command execution
         try:
-            print("[*] loading PostgreSQL plugin")
-            config.DATABASE.start_service()
-            print("[+] PostgreSQL database now avaliable")
-            print("[*] loading Metasploit plugin")
-            config.METASPLOIT.start_service()
-            print("[+] Metasploit now avaliable")
-            print("[*] loading Nessus plugin")
-            config.NESSUS.start_service()
-            print("[+] Nessus now avaliable")
-            print("[*] logging into Metasploit via RPC")
-            config.MSFCLIENT.login()
-            print("[+] Metasploit client login successfull")
-            print("[*] connecting msf console to Metasploit client")
-            config.MSFCONSOLE.connect(config.MSFCLIENT)
-            print("[+] msf console now avaliable, see 'help msf'")
-            print("[*] connecting msf commmand tool to msf console")
-            config.MSFCOMMANDS.connect_nessus()
-            print("[+] Nessus now avaliable to msf")
-            print("[*] connecting Metasploit to database")
-            config.MSFCOMMANDS.connect_database()
-            print("[+] Metasploit connected to database")
-            print("[+] setting up msf workspace")
-            config.MSFCOMMANDS.set_workspace('default')
-            print("[*] setup complete")
+            config.COMMANDS.setup()
         except Exception as e:
             handle(e)
 
@@ -74,8 +52,11 @@ class Console(Cmd):
 
     def do_scan(self, cmd):
         """
-        Scan hosts.
-        Options: host, port, full
+        Scan a network or targetted host
+        Options:
+        - scan hosts "ip range"
+        - scan port "target name"
+        - scan full "target name"
         """
         # command validation
         cmds = cmd.split()
@@ -85,18 +66,18 @@ class Console(Cmd):
         scan_type = cmds[0].strip()
         target_name = cmds[1].strip()
         try:
-            if scan_type == 'host':
+            if scan_type == 'hosts':
                 config.RECON.host_scan(target_name, verbose=True)
-            if scan_type == 'port':
-                config.RECON.port_scan(scan_type, target_name, verbose=False)
+            if scan_type == 'ports':
+                config.RECON.port_scan('port', target_name, verbose=False)
             if scan_type == 'full':
-                config.RECON.full_scan(scan_type, target_name, verbose=False)
+                config.RECON.full_scan('full', target_name, verbose=False)
 
         except Exception as e:
             handle(e)
 
     def complete_scan(self, text, line, begidx, endidx):
-        options = ['host', 'port', 'full']
+        options = ['hosts', 'ports', 'full']
         if text:
             scan_opts = ([o for o in options if o.startswith(text)])
         return scan_opts
@@ -107,7 +88,9 @@ class Console(Cmd):
 
     def do_target(self, cmd):
         """
-        Target host as the ip address.
+        Target a host on the network
+        Options:
+        - target "target name" "ip address"
         """
         # command validation
         cmds = cmd.split()
@@ -132,7 +115,10 @@ class Console(Cmd):
     def do_show(self, cmd):
         """
         Show target attributes
-        - Options:
+        Options:
+        - show targets
+        - show target "target name"
+        - show vulns "target name"
         """
         # Command validation
         cmds = cmd.split()
@@ -154,8 +140,10 @@ class Console(Cmd):
 
     def do_import(self, cmd):
         """
-        Import a scan to a targeted host.
-        Options: full, target name
+        Import a scan to a targeted host
+        Options:
+        - import port "target name"
+        - import full "target name"
         """
         # command validation
         cmds = cmd.split()
@@ -188,7 +176,7 @@ class Console(Cmd):
 
     def do_msf(self, cmd):
         """
-        Open msf console.
+        Open msf console
         """
         # command validation
         cmds = cmd.split()
@@ -212,7 +200,7 @@ class Console(Cmd):
 
     def do_shell(self, cmd):
         """
-        run a shell command.
+        Run a shell command
         """
         try:
             config.COMMANDS.shell(cmd)
@@ -225,7 +213,7 @@ class Console(Cmd):
 
     def do_plan(self, cmd):
         """
-        execute planner.
+        Run AI Planner
         """
         try:
             config.COMMANDS.plan(verbose=True)
@@ -238,7 +226,14 @@ class Console(Cmd):
 
     def do_exploit(self, cmd):
         """
-        run exploit
+        Execute an exploit against a target
+        Options:
+        - exploit cve-2008-4250 "target name"
+        - exploit msql-brute-force "target name"
+        - exploit tokens "target name"
+        - exploit cve-2011-2005 "target name"
+        - exploit hashdump "target name"
+        - exploit psexec "target name"
         """
         # command validation
         cmds = cmd.split()
@@ -269,7 +264,8 @@ class Console(Cmd):
             handle(e)
 
     def complete_exploit(self, text, line, begidx, endidx):
-        options = ['cve-2008-4250', 'msql-brute-force', 'tokens', 'cve-2011-2005']
+        options = ['cve-2008-4250', 'msql-brute-force', 'tokens', \
+                        'cve-2011-2005', 'hashdump', 'psexec']
         if text:
             scan_opts = ([o for o in options if o.startswith(text)])
         return scan_opts
@@ -279,19 +275,19 @@ class Console(Cmd):
     ############################################
 
     def default(self, cmd):
+        """
+        Default console commands. Runs as python executable if unmatched
+        """
         if cmd == 'q':
             return self.do_cexit(cmd)
         if cmd == 's':
-            self.do_setup(cmd)
+            self.do_setup('')
         else:
             try:
                 exec(cmd)
             except Exception as e:
                 handle(e)
         # print("*** Unknown Command, see 'help'")
-
-    def precmd(self, cmd):
-        return Cmd.precmd(self, cmd)
 
     def postcmd(self, stop, line):
         print('\n')
@@ -315,11 +311,6 @@ class Console(Cmd):
     do_EOF = do_cexit # assign end-of-line to exit
 
     ##################################################
-
-    # def do_input(self, s):
-    #     if s=='':
-    #         s = input('Your name please: ')
-    #     print('Hello', s)
 
 ################################################################################
 # Handle exceptions within console (print traceback)

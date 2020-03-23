@@ -1,11 +1,16 @@
 
+import os
 import re
+import sys
+import time
 import subprocess
+from pathlib import Path
+from dotenv import load_dotenv
 # global variables
-# import config
+import config
 
 ################################################################################
-# Generic Console Command Class - containing methods
+# Priviledge Escalation commands
 ################################################################################
 
 class Recon(object):
@@ -63,7 +68,6 @@ class Recon(object):
         cmd += scan_name + " "
         cmd += 'none' + " "
         cmd += ip_addr
-        print("command:", cmd)
         msf_reply = config.MSFCONSOLE.callback(cmd, verbose=verbose)
         if 'scan added' not in msf_reply:
             raise Exception("error creating scan")
@@ -83,15 +87,18 @@ class Recon(object):
             raise Exception("error launching scan")
         # wait for scan to complete
         scanning = True
+        print('\r[*] scan running...')
         while scanning:
+            config.LOADING = True
             time.sleep(5)
-            print('[*] scan running...')
             cmd = "nessus_scan_list"
             msf_reply = config.MSFCONSOLE.callback(cmd, verbose=verbose)
             for line in msf_reply.splitlines():
                 if scanid in line and 'completed' in line:
-                    print("[*] scan completed")
+                    print("\r[*] scan completed")
                     scanning = False
+                    config.LOADING = False
+                    time.sleep(1)
         # import scan into postgresql
         cmd = "nessus_db_import " + scanid
         msf_reply = config.MSFCONSOLE.callback(cmd, verbose=verbose)
@@ -136,7 +143,6 @@ class Recon(object):
         cmd += scan_name + " "
         cmd += 'none' + " "
         cmd += ip_addr
-        print("command:", cmd)
         msf_reply = config.MSFCONSOLE.callback(cmd, verbose=verbose)
         if 'scan added' not in msf_reply:
             raise Exception("error creating scan")

@@ -49,6 +49,9 @@ class MsfClient(object):
         self.token = None
 
     def login(self):
+        """
+        Log client in to Metasploit RPC API
+        """
         auth = self.msf_callback(MsfRpcMethod.AuthLogin,
                                  [self.user, self.password])
         try:
@@ -93,6 +96,9 @@ class MsfClient(object):
         return convert(decode(r.content))  # convert all keys/vals to utf8
 
     def close_connection(self):
+        """
+        Close connection with RPC API
+        """
         if self.ssl is True:
             url = "https://%s:%s%s" % (self.host, self.port, self.uri)
         else:
@@ -112,13 +118,6 @@ class MsfClient(object):
         token = str(uuid.uuid4())
         self.msf_callback(MsfRpcMethod.AuthTokenAdd, [token])
         return token
-
-    def logout(self):
-        """
-        Logs the current user out. Note: do not call directly.
-        """
-        self.msf_callback(MsfRpcMethod.AuthLogout, [self.token])
-        print("User logged out")
 
 ################################################################################
 # Encoding

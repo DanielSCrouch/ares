@@ -73,16 +73,18 @@ class PDDLTranslate(object):
             if target.session_id:
                 p += "\n       (has_session " + name + ")"
             # add access level
-            access = self.get_legal(target.access)
-            p += "\n       (access_" + access + " " + name + ")"
+            if target.access:
+                access = self.get_legal(target.access)
+                p += "\n       (access_" + access + " " + name + ")"
             # add os
-            os = self.get_legal(target.os)
-            p += "\n       (os_" + os + " " + name + ")"
+            if target.os:
+                os = self.get_legal(target.os)
+                p += "\n       (os_" + os + " " + name + ")"
             # add port scanned
-            if target.port_scanned:
+            if target.port_scan:
                 p += "\n       (port_scanned " + name + ")"
             # add full scanned
-            if target.full_scanned:
+            if target.full_scan:
                 p += "\n       (full_scanned " + name + ")"
             # add tcp ports
             for tcp_port in target.tcp_ports:

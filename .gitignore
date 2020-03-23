@@ -132,5 +132,8 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# Virtual environment venv file 
+# Virtual environment venv file
 venv/
+
+# Apple cloud
+.DS_Store

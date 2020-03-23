@@ -4,14 +4,6 @@ import csv
 import glob
 from pathlib import Path
 from dotenv import load_dotenv
-#
-
-from .service import Service
-from .vulnerability import Vuln
-from . import service_identifier
-from . import os_identifier
-from . import installed_service_identifier
-
 
 class Target(object):
     """
@@ -21,10 +13,10 @@ class Target(object):
         self.name = name
         self.ip = ip
         self.session_id = ''
-        self.access = 'no access'
-        self.os = 'unknown'
-        self.full_scanned = False
-        self.port_scanned = False
+        self.access = ''
+        self.os = ''
+        self.full_scan = False
+        self.port_scan = False
         self.tcp_ports = []
         self.udp_ports = []
         self.services = []
@@ -41,15 +33,12 @@ class Target(object):
         string = '\n    ' + str("=" * 60)
         # Target
         string += "\n\n    IP:        " + self.ip
+        # Session ID
+        string += "\n\n    Session:   " + self.session_id
         # Priviledges
         string += "\n\n    Access:    " + self.access
         # OS
-        attribute = self.os
-        string += "\n\n    OpSystem:  "
-        if len(attribute) >1:
-            string += str(attribute[0])
-            for item in attribute[1:min(5, len(attribute))]:
-                string += '\n               ' + str(item)
+        string += "\n\n    OS:        " + self.os
         # TCP Ports
         string += "\n\n    TCP Ports: "
         for item in self.tcp_ports[0:min(3, len(self.tcp_ports))]:
@@ -86,59 +75,3 @@ class Target(object):
             string += '\n               total(' + str(len(attribute)) + ')'
         string += "\n\n    " + str("=" * 60) + '\n'
         return string
-
-    def import_scan(self, scan_path):
-        """
-        Update Target from scan csv.
-        """
-        with open(scan_path, newline='') as csvfile:
-            reader = csv.DictReader(csvfile)
-            for row in reader:
-
-                # identify detection attributes
-                ip = row['Host']
-                plugin = str(row['Plugin ID'])
-                cve_id = row['CVE']
-                cvss = row['CVSS']
-                protocol = row['Protocol']
-                port = str(row['Port'])
-                name = row['Name']
-                plugin_out = row['Plugin Output']
-                risk = row['Risk']
-
-                # add new hosts
-                if ip in self.ip:
-
-                    # identify and add open tcp ports
-                    if protocol == 'tcp' and port != '0':
-                        if port not in self.tcp_ports:
-                            self.tcp_ports.append(port)
-
-                    # identify and add open tcp ports
-                    if protocol == 'udp' and port != '0':
-                        if port not in self.udp_ports:
-                            self.udp_ports.append(port)
-
-                    # identify and add services
-                    service_name = service_identifier.get_service(plugin)
-                    if service_name is not None:
-                        s = Service(plugin, service_name, protocol, port)
-                        self.services.append(s)
-
-                    # identify and add vulnerabilities
-                    if len(cve_id) > 3:
-                        if cve_id not in self.vulns.keys():
-                            v = Vuln(plugin, cve_id, cvss, protocol, port, risk)
-                            self.vulns[cve_id] = v
-
-                    # identify and add OS
-                    if plugin == "11936":
-                        os_list = os_identifier.get_os(plugin_out)
-                        self.os = os_list[0] # assumes first is correct!
-
-                    # identify and add installed services (credential access)
-                    if plugin == "20811":
-                        is_list = installed_service_identifier.get_service(plugin_out)
-                        self.installed_services = is_list
-        # set to scanned
-        self.scanned = True

@@ -5,6 +5,7 @@ import os
 from threading import Thread
 from dotenv import load_dotenv
 import subprocess
+import config
 
 # Has to be run from sudo
 
@@ -44,10 +45,9 @@ class Metasploit(object):
                                    universal_newlines = True, \
                                    shell=True,                \
                                    bufsize=0)
-
-        for line in popen.stdout: 
-            print(line.decode())
+        config.LOADING = True
         time.sleep(10)
+        config.LOADING = False
 
         cmd = "load msgrpc"
         cmd += " ServerHost=" + MSF_SERVER

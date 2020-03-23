@@ -101,9 +101,6 @@ class MsfConsole(Cmd):
             self.msf_lock.release()
             time.sleep(1)
 
-    def precmd(self, cmd):
-        return Cmd.precmd(self, cmd)
-
     def write_read(self, cmd=None, timeout=10, wait=0):
         """
         Write and read data to/from the msf server, with prompt update.
@@ -160,13 +157,14 @@ class MsfConsole(Cmd):
         time.sleep(wait)
         # wait if busy
         if self.check_busy() and not self.active_session:
-            print('[*] msfconsole loading...')
+            config.LOADING = True
             timer = 0
             while self.check_busy() and timer < timeout:
                 timer += 1
                 time.sleep(1)
             if self.check_busy() and timer == timeout:
-                print('[!] msf console timeout: busy for >10s')
+                print('\r[!] msf console timeout: busy for >10s')
+            config.LOADING = False
 
     def check_busy(self):
         """
@@ -196,7 +194,7 @@ class MsfConsole(Cmd):
                 line = '    ' + line
                 if line.startswith('    [') and not self.verbose:
                     line = line.strip()
-                print(line[0:60])
+                print('\r' + line[0:60])
                 if len(line) > 60:
                     line_count = int(len(line) / 60)
                     for i in range(1,line_count +1):
@@ -215,16 +213,28 @@ class MsfConsole(Cmd):
             self.callback(cmd)
             print('\n')
 
-    def set_active_session(self, active=True):
-        self.active_session = active
+    def open_console(self):
+        """
+        Initialise and start console loop
+        """
+        self.prompt_update()
+        self.set_verbose()
+        self.set_active_session()
+        self.cmdloop()
 
     def open_session(self, target_name, verbose=False):
+        """
+        Open an existing Metasploit session with remote host
+        """
         target = config.TARGETS[target_name]
         self.set_active_session()
         cmd = "sessions -i " + target.session_id
         msf_reply = config.MSFCONSOLE.callback(cmd, verbose=verbose, wait=1)
 
     def background_session(self, target_name, verbose=False):
+        """
+        Background a currently open Metasploit session with remote host
+        """
         target= config.TARGETS[target_name]
         cmd = "background"
         msf_reply = self.callback(cmd, verbose=verbose, wait=1)
@@ -232,9 +242,6 @@ class MsfConsole(Cmd):
         msf_reply = self.callback(cmd, verbose=verbose, wait=1)
         self.set_active_session(active = False)
         print(msf_reply)
-
-    def set_verbose(self, verbose=True):
-        self.verbose = verbose
 
     def callback(self, cmd, verbose=True, timeout=10, wait=0):
         """
@@ -250,44 +257,14 @@ class MsfConsole(Cmd):
             self.display(msf_data)
         return msf_data
 
-    def sessionkill(self):
-        """
-        Kill all active meterpreter or shell sessions.
-        """
-        self.client.msf_callback(MsfRpcMethod.ConsoleSessionKill, [self.cid])
+    def set_verbose(self, verbose=True):
+        self.verbose = verbose
 
-    def sessiondetach(self):
-        """
-        Detach the current meterpreter or shell session.
-        """
-        self.client.msf_callback(MsfRpcMethod.ConsoleSessionDetach, [self.cid])
-
-    def do_tabs(self, line):
-        """
-        Tab completion for console commands.
-        Mandatory Arguments:
-        - line : a partial command to be completed.
-        """
-        return self.client.msf_callback(MsfRpcMethod.ConsoleTabs, \
-                                        [self.cid, line])['tabs']
-
-    def destroy(self):
-        """
-        Destroy the console.
-        """
-        self.client.msf_callback(MsfRpcMethod.ConsoleDestroy, [self.cid])
+    def set_active_session(self, active=True):
+        self.active_session = active
 
     def stop_polling(self):
         self.polling = False
-
-    def open_console(self):
-        """
-        Initialise and start console loop
-        """
-        self.prompt_update()
-        self.set_verbose()
-        self.set_active_session()
-        self.cmdloop()
 
     def do_cexit(self, cmd):
         """
