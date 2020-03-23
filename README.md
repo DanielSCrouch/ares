@@ -3,9 +3,13 @@ Automated penetration testing tool for Ubuntu Linux, designed as an extension to
 
 ## Prerequisites
 [Metasploit Framework](https://metasploit.help.rapid7.com/docs/installing-the-metasploit-framework)
+
 [Nessus Essentials Vulnerability Scanner](https://www.tenable.com/products/nessus/nessus-essentials)
+
 [PostgreSQL](https://www.postgresql.org)
+
 Optional:
+
 [PgAmin4](https://www.pgadmin.org/download/)
 
 ```something here```
