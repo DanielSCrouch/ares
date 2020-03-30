@@ -55,7 +55,7 @@ class Commands(object):
             print("\r[*] setup complete")
             self.setup_complete = True
 
-    def plan(self, depth=1, verbose=False):
+    def plan(self, depth=2, verbose=False):
         """
         Generate problem file and run planner.
         """
