@@ -69,23 +69,23 @@ class PDDLTranslate(object):
             name = self.get_legal(target.name)
             # add targets
             p += "\n       (is_host " + name + ")"
-            # add session id
-            if target.session_id:
-                p += "\n       (has_session " + name + ")"
-            # add access level
-            if target.access:
-                access = self.get_legal(target.access)
-                p += "\n       (access_" + access + " " + name + ")"
-            # add os
-            if target.os:
-                os = self.get_legal(target.os)
-                p += "\n       (os_" + os + " " + name + ")"
             # add port scanned
             if target.port_scan:
                 p += "\n       (port_scanned " + name + ")"
             # add full scanned
             if target.full_scan:
                 p += "\n       (full_scanned " + name + ")"
+            # add initial access
+            if target.session_id:
+                p += "\n       (initial_access " + name + ")"
+            # add admin access
+            if target.access:
+                access = self.get_legal(target.access)
+                p += "\n       (" + access + "_access" + " " + name + ")"
+            # add os
+            if target.os:
+                os = self.get_legal(target.os)
+                p += "\n       (os_" + os + " " + name + ")"
             # add tcp ports
             for tcp_port in target.tcp_ports:
                 # tcp_port = self.get_legal(tcp_port)
@@ -106,17 +106,35 @@ class PDDLTranslate(object):
         return p
 
     def get_goals(self, depth):
+        # parse goal
+        goal = ''
+        if depth == 1:
+            goal = 'port_scanned'
+        if depth == 2:
+            goal = 'full_scanned'
+        if depth == 3:
+            goal = 'initial_access'
+        if depth == 4:
+            goal = 'admin_access'
+        if depth == 5:
+            goal = 'traversed'
+        if depth == 6:
+            goal = 'command'
+        if depth == 7:
+            goal = 'objective'
+        print('goal is: ', goal)
+        # format goal
         p = "\n\n(:goal"
         if len(config.TARGETS) > 1:
             p += " (or"
             for target in config.TARGETS.values():
                 name = self.get_legal(target.name)
-                p += "\n    (has_progress" + str(depth) + " " + name + ")"
+                p += "\n    (" + goal + " " + name + ")"
             p += "\n    )"
         else:
             for target in config.TARGETS.values():
                 name = self.get_legal(target.name)
-                p += "\n    (has_progress" + str(depth) + " " + name + ")"
+                p += "\n    (" + goal + " " + name + ")"
         p += "\n    )"
         return p
 

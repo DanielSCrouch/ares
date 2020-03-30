@@ -320,6 +320,7 @@ class Console(Cmd):
         - test 4    : port scan
         - test 5    : import scan (port and full)
         - test 6    : planning (initial access)
+        - test 7    : multi-stage planning
         """
         try:
             config.TESTS.test(cmd)
