@@ -40,7 +40,7 @@ class Planner(object):
                                    stderr = subprocess.PIPE,  \
                                    shell=True,                \
                                    bufsize=0)
-        process.wait(5)
+        process.wait(30)
         out, err = process.communicate()
         if not err:
             outpath = Path.cwd() / 'planning' / 'pddl_files' / 'plan.txt'

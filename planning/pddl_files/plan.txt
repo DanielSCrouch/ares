@@ -7,5 +7,92 @@ problem 'ATTACKVECTOR' defined
  ... done.
 
 
-ff: goal can be simplified to FALSE. No plan will solve it
+no metric specified. plan length assumed.
+
+checking for cyclic := effects --- OK.
+
+ff: search configuration is EHC, if that fails then  best-first on 1*g(s) + 5*h(s) where
+    metric is  plan length
+
+Cueing down from goal distance:   34 into depth [1]
+                                  33            [1]
+                                  32            [1]
+                                  31            [1]
+                                  30            [1]
+                                  29            [1]
+                                  28            [1]
+                                  27            [1]
+                                  26            [1]
+                                  25            [1]
+                                  24            [1]
+                                  23            [1]
+                                  22            [1]
+                                  21            [1]
+                                  20            [1]
+                                  19            [1]
+                                  18            [1]
+                                  17            [1]
+                                  16            [1]
+                                  15            [1]
+                                  14            [1]
+                                  13            [1]
+                                  12            [1]
+                                  11            [1]
+                                  10            [1]
+                                   9            [1]
+                                   8            [1]
+                                   7            [1]
+                                   6            [1]
+                                   5            [1]
+                                   4            [1]
+                                   3            [1]
+                                   2            [1]
+                                   1            [1]
+                                   0            
+
+ff: found legal plan as follows
+
+step    0: PORT_SCAN LUNA0
+        1: FULL_SCAN LUNA0
+        2: EXPLOIT_CVE_2008_4250 LUNA0
+        3: EXPLOIT_HASHDUMP LUNA0
+        4: EXPLOIT_PSEXEC LUNA0 BRUCE1
+        5: EXPLOIT_PSEXEC BRUCE1 BRUCE2
+        6: EXPLOIT_PSEXEC BRUCE2 BRUCE3
+        7: EXPLOIT_PSEXEC BRUCE3 BRUCE4
+        8: EXPLOIT_PSEXEC BRUCE4 BRUCE5
+        9: EXPLOIT_PSEXEC BRUCE5 BRUCE6
+       10: EXPLOIT_PSEXEC BRUCE6 BRUCE7
+       11: EXPLOIT_PSEXEC BRUCE7 BRUCE8
+       12: EXPLOIT_PSEXEC BRUCE8 BRUCE9
+       13: EXPLOIT_PSEXEC BRUCE9 BRUCE0
+       14: EXPLOIT_PSEXEC BRUCE0 NIGEL1
+       15: EXPLOIT_PSEXEC NIGEL1 NIGEL2
+       16: EXPLOIT_PSEXEC NIGEL2 NIGEL3
+       17: EXPLOIT_PSEXEC NIGEL3 NIGEL4
+       18: EXPLOIT_PSEXEC NIGEL4 NIGEL5
+       19: EXPLOIT_PSEXEC NIGEL5 NIGEL6
+       20: EXPLOIT_PSEXEC NIGEL6 NIGEL7
+       21: EXPLOIT_PSEXEC NIGEL7 NIGEL8
+       22: EXPLOIT_PSEXEC NIGEL8 NIGEL9
+       23: EXPLOIT_PSEXEC NIGEL9 NIGEL0
+       24: EXPLOIT_PSEXEC NIGEL0 LUNA1
+       25: EXPLOIT_PSEXEC LUNA1 LUNA2
+       26: EXPLOIT_PSEXEC LUNA2 LUNA3
+       27: EXPLOIT_PSEXEC LUNA3 LUNA4
+       28: EXPLOIT_PSEXEC LUNA4 LUNA5
+       29: EXPLOIT_PSEXEC LUNA5 LUNA6
+       30: EXPLOIT_PSEXEC LUNA6 LUNA7
+       31: EXPLOIT_PSEXEC LUNA7 LUNA8
+       32: EXPLOIT_PSEXEC LUNA8 LUNA9
+       33: EXPLOIT_PSEXEC LUNA9 LUNA0
+     
+
+time spent:    0.00 seconds instantiating 1080 easy, 0 hard action templates
+               0.00 seconds reachability analysis, yielding 690 facts and 1080 actions
+               0.00 seconds creating final representation with 690 relevant facts, 0 relevant fluents
+               0.00 seconds computing LNF
+               0.00 seconds building connectivity graph
+               0.00 seconds searching, evaluating 35 states, to a max depth of 1
+               0.00 seconds total time
 

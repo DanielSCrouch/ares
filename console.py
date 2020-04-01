@@ -278,6 +278,8 @@ class Console(Cmd):
             return self.do_cexit(cmd)
         if cmd == 's':
             self.do_setup('')
+        if cmd == 't':
+            config.TESTS.test('7')
         else:
             try:
                 exec(cmd)

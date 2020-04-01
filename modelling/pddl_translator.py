@@ -43,7 +43,8 @@ class PDDLTranslate(object):
     def get_objects(self):
         p = "\n\n(:objects"
         # add hosts
-        p += "\n    placeholder - host"
+        if len(config.TARGETS.values()) == 0:
+            p += "\n    placeholder - host"
         for target in config.TARGETS.values():
             name = self.get_legal(target.name)
             p += "\n    " + name + " - host"
@@ -64,7 +65,8 @@ class PDDLTranslate(object):
 
     def get_init(self, depth):
         p = "\n\n(:init"
-        p += " (is_host placeholder)"
+        if len(config.TARGETS.values()) == 0:
+            p += " (is_host placeholder)"
         for target in config.TARGETS.values():
             name = self.get_legal(target.name)
             # add targets
@@ -126,10 +128,11 @@ class PDDLTranslate(object):
         # format goal
         p = "\n\n(:goal"
         if len(config.TARGETS) > 1:
-            p += " (or"
+            p += " (and"
             for target in config.TARGETS.values():
                 name = self.get_legal(target.name)
                 p += "\n    (" + goal + " " + name + ")"
+                # p += "\n    (" + 'admin_access' + " " + name + ")"
             p += "\n    )"
         else:
             for target in config.TARGETS.values():

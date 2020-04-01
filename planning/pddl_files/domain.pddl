@@ -1,8 +1,8 @@
 (define (domain attacksurface)
 (:requirements :adl :typing)
-(:types 	host service			 	- target
-					host os port vuln 	- knowledge
-					scan exploit 				- action)
+(:types 	host							 	- target
+					scan exploit 				- action
+					os port vuln)
 
 (:predicates (is_host           												?x - host)
 						 (port_scanned		  												?x - host)
@@ -56,9 +56,17 @@
 						 (hist_exploit_tokens												?x - host)
 						 (hist_exploit_cve_2011_2005								?x - host)
 						 (hist_exploit_hashdump											?x - host)
-						 (hist_exploit_psexec												?x - host))
+						 (hist_exploit_psexec												?x - host)
+						 (wins 																			?x - host))
 
 
+ (:action test
+ 	:parameters   (?x - host)
+ 	:precondition (and (has_tcp_port_3306 ?x)
+										 (traversed ?x))
+ 	:effect       (and (wins ?x))
+
+ 								)
  (:action port_scan
  	:parameters   (?x - host)
  	:precondition (not (port_scanned ?x))
@@ -69,7 +77,9 @@
 	:parameters   (?x - host)
 	:precondition (and (port_scanned ?x)
 										 (not (full_scanned ?x)))
-	:effect       (and (full_scanned ?x))
+	:effect       (and (full_scanned ?x)
+													(os_microsoft_windows_xp_service_pack_3 ?x)
+													(has_CVE_2008_4250 ?x))
 )
 
 (:action exploit_cve_2008_4250
@@ -107,7 +117,7 @@
 (:action exploit_cve_2011_2005
  	:parameters   		(?x - host)
  	:precondition 		(and (initial_access ?x)
- 									  		 (user_access ?x)
+ 									  		 (admin_access ?x)
 												 (not (hist_exploit_cve_2011_2005 ?x)))
  	:effect      		  (and (admin_access ?x)
 												 (hist_exploit_cve_2011_2005 ?x))
@@ -126,13 +136,12 @@
 (:action exploit_psexec
  	:parameters   		(?x - host ?y - host)
  	:precondition 		(and (has_admin_hash ?x)
-												 (not (admin_access ?y))
-												 (not (hist_exploit_psexec ?y)))
+												 (not (hist_exploit_psexec ?x)))
  	:effect      		  (and (has_admin_hash ?y)
 												 (initial_access ?y)
-												 (admin_access ?y)
+												 (user_access ?y)
 												 (traversed ?y)
-												 (hist_exploit_psexec ?y))
+												 (hist_exploit_psexec ?x))
 )
 
 )

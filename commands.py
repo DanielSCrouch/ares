@@ -66,11 +66,12 @@ class Commands(object):
             print("no targets, see 'help target'")
             return
         # recall planner to find maximum depth
-        for d in range(1, depth+1):
+        for d in range(5, depth+1):
             print("\r[*] running planner at depth", d)
             steps = []
-            config.PDDLTRANSLATE.generate_problem(depth=d)
-            config.PLANNER.run()
+            config.PDDLTRANSLATE.generate_problem(depth=5) #d
+            for x in range(100):
+                config.PLANNER.run()
             plan = outpath.read_text()
             if 'plan' not in plan:
                 break
