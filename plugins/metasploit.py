@@ -61,7 +61,7 @@ class Metasploit(object):
         self.process.stdin.write(cmd)
         self.process.stdin.flush()
 
-        time.sleep(1)
+        time.sleep(3)
 
         Thread(target=self.poll_server).start()
         return True

