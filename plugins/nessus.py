@@ -1,4 +1,7 @@
-
+# Module to provide Nessus plugin support (start/stop service)
+#
+# Author: Daniel Crouch
+# Date created: March 2020
 
 import time
 import os

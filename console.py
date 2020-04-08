@@ -1,3 +1,8 @@
+# Main Ares console. Provides the command line interface used to access
+# all other features.
+#
+# Author: Daniel Crouch
+# Date created: March 2020
 
 import os
 import re

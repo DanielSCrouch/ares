@@ -1,3 +1,11 @@
+# Provides the MsfClient (Metasploit RPC Client) object for interaction with
+# Metasploit through the API
+#
+# Code adapted from PyMetaSploit3 open source project by DanMcInerney
+# 
+# Author: Daniel Crouch
+# Date created: March 2020
+
 import os
 import requests
 import uuid

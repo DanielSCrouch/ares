@@ -1,3 +1,9 @@
+# Provides the MsfConsole (Embedded Metasploit Console) class object 
+#
+# Author: Daniel Crouch
+# Date created: March 2020
+
+
 import os
 import requests
 import uuid

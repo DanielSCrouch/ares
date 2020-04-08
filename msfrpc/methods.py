@@ -1,4 +1,7 @@
-
+# Provides Metasploit RPC command translations 
+#
+# Author: Daniel Crouch
+# Date created: March 2020
 
 class MsfRpcMethod(object):
     AuthLogin = 'auth.login'

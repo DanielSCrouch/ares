@@ -1,5 +1,8 @@
-# Extension of console.py module
-# Provides additional functions/commands to console
+# Extension of console.py module providing functions/commands support to
+# the Ares console
+#
+# Author: Daniel Crouch
+# Date created: March 2020
 
 import os
 import re

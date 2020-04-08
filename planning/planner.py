@@ -1,3 +1,9 @@
+# Module to providing the Planner object, used to call Metric-FF on a
+# pre-generated domain and problem file 
+#
+# Author: Daniel Crouch
+# Date created: March 2020
+
 import os
 import re
 import time

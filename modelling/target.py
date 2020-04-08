@@ -1,3 +1,8 @@
+# Provides the target modelling object used to represent the detected
+# attributes of a host 
+#
+# Author: Daniel Crouch
+# Date created: March 2020
 
 import os
 import csv

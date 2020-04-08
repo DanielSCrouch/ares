@@ -1,3 +1,9 @@
+# Provide methods for importing Nessus scan reports in a CSV format to the
+# target model 
+#
+# Author: Daniel Crouch
+# Date created: March 2020
+
 import csv
 import glob
 import time

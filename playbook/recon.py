@@ -1,3 +1,7 @@
+# Module providing Scanning exploits
+#
+# Author: Daniel Crouch
+# Date created: March 2020
 
 import os
 import re

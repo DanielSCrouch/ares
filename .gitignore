@@ -137,3 +137,4 @@ venv/
 
 # Apple cloud
 .DS_Store
+.DS_store

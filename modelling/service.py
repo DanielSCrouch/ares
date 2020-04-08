@@ -1,4 +1,7 @@
-
+# Object describing a detected host service 
+#
+# Author: Daniel Crouch
+# Date created: March 2020
 
 class Service(object):
     """

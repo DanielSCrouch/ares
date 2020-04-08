@@ -1,3 +1,8 @@
+# PDDL Translator, used to format target models into an problem/domain file
+# compatible with the AI Planner 
+#
+# Author: Daniel Crouch
+# Date created: March 2020
 
 import os
 import re

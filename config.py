@@ -1,3 +1,8 @@
+# Configuration, a globally accessable module containing the initialisations
+# of all persistent objects and variables
+#
+# Author: Daniel Crouch
+# Date created: March 2020 
 
 # module imports
 import os

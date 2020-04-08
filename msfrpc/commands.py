@@ -1,6 +1,7 @@
-
-# Extension of msf console module
-# Provides collection of automated msfconsole methods
+# Extension of msf console module providing automated commands
+#
+# Author: Daniel Crouch
+# Date created: March 2020 
 
 import os
 import re
