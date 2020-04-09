@@ -15,7 +15,7 @@ with open(requirements_path) as f:
     packages = [line.rstrip('\n') for line in f]
 
 setup(name="ares",
-      version='0.3',
+      version='1.0',
       description='Automated Recon and Exploit Software',
       install_requires=packages,
       author = "Daniel Crouch")
