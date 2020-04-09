@@ -2,7 +2,7 @@
 # of all persistent objects and variables
 #
 # Author: Daniel Crouch
-# Date created: March 2020 
+# Date created: March 2020
 
 # module imports
 import os
@@ -22,6 +22,7 @@ from playbook.recon import Recon
 from playbook.initial_access import InitialAccess
 from playbook.priviledge_escalation import PriviledgeEsc
 from playbook.traversal import Traversal
+from playbook.control import Control
 from plugins.postgresql import PostgreSQL
 from plugins.metasploit import Metasploit
 from plugins.nessus import Nessus
@@ -45,8 +46,10 @@ RECON = Recon()
 INITIALACCESS = InitialAccess()
 PRIVILEDGEESC = PriviledgeEsc()
 TRAVERSAL = Traversal()
+CONTROL = Control()
 # Global variables
 TARGETS = {}
+MSF_LHOST = os.getenv('MSF_LHOST')
 NESSUS_DEF_DIR = os.getenv('NESSUS_DEF_DIR')
 NESSUS_LOC_DIR = os.getenv('NESSUS_LOC_DIR')
 FULL_SCAN_ID = os.getenv('FULL_SCAN_ID')

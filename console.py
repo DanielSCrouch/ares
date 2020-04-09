@@ -259,6 +259,8 @@ class Console(Cmd):
                 config.PRIVILEDGEESC.exploit_hashdump(target_name)
             if exploit == 'psexec':
                 config.TRAVERSAL.exploit_psexec(target_name, target_name2)
+            if exploit == 'persistance':
+                config.CONTROL.persistant_reverse_tcp(target_name)
             else:
                 pass
         except Exception as e:
@@ -326,6 +328,7 @@ class Console(Cmd):
         - test 5    : import scan (port and full)
         - test 6    : planning (initial access)
         - test 7    : multi-stage planning
+        - test 8    : command and control
         """
         try:
             config.TESTS.test(cmd)

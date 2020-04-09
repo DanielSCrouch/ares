@@ -31,6 +31,8 @@ class Tests(object):
             self.test6()
         if option == "7":
             self.test7()
+        if option == "8":
+            self.test8()
 
     def test1(self):
         """
@@ -277,3 +279,33 @@ class Tests(object):
         #         print("[!] Test failed: no initial access attack planned")
         #         return
         print("[*] Test completed in", time_ela, "seconds")
+
+    def test8(self):
+        """
+        Persistance (command and control)
+        """
+        print("[*] Running test 8: command and control")
+        f = io.StringIO()
+        with redirect_stdout(f):
+            ###
+            start_time = time.time()
+            try:
+                config.CONSOLE.do_setup('')
+                config.CONSOLE.do_target('t1 172.16.231.130')
+                config.CONSOLE.do_target('t2 172.16.231.131')
+                config.CONSOLE.do_import('port t1')
+                config.CONSOLE.do_import('full t1')
+                config.CONSOLE.do_import('port t2')
+                config.CONSOLE.do_import('full t2')
+                config.CONSOLE.do_exploit('cve-2008-4250 t1')
+                config.CONSOLE.do_exploit('persistance t1')
+            except Exception as e:
+                print("[!] Exception raised \n", e)
+            time_ela = int(time.time() - start_time)
+            ###
+        s = f.getvalue()
+        print("*******************")
+        print(s)
+        print("*******************")
+        # checks
+        print("[*] Test passed in", time_ela, "seconds")
