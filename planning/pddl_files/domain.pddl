@@ -74,7 +74,7 @@
 
 (:action exploit_cve_2008_4250
  	:parameters   		(?x - host)
- 	:precondition 		(and (os_microsoft_windows_xp_service_pack_2 ?x)
+ 	:precondition 		(and (os_microsoft_windows_xp_service_pack_3 ?x)
  									  		 (has_CVE_2008_4250 ?x)
 												 (not (initial_access ?x))
 												 (not (hist_exploit_cve_2008_4250 ?x))

@@ -261,6 +261,8 @@ class Console(Cmd):
                 config.TRAVERSAL.exploit_psexec(target_name, target_name2)
             if exploit == 'persistance':
                 config.CONTROL.persistant_reverse_tcp(target_name)
+            if exploit == 'snap':
+                config.RECON.snap(target_name)
             else:
                 pass
         except Exception as e:
@@ -268,7 +270,8 @@ class Console(Cmd):
 
     def complete_exploit(self, text, line, begidx, endidx):
         options = ['cve-2008-4250', 'msql-brute-force', 'tokens', \
-                        'cve-2011-2005', 'hashdump', 'psexec']
+                        'cve-2011-2005', 'hashdump', 'psexec', 'persistance', \
+                        'snap']
         if text:
             scan_opts = ([o for o in options if o.startswith(text)])
         return scan_opts

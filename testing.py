@@ -101,16 +101,16 @@ class Tests(object):
             start_time = time.time()
             try:
                 config.CONSOLE.do_setup('')
-                config.CONSOLE.do_target('bruce 172.16.231.130')
-                config.CONSOLE.do_target('nigel 172.16.231.131')
+                config.CONSOLE.do_target('t1 172.16.231.130')
+                config.CONSOLE.do_target('t2 172.16.231.131')
             except Exception as e:
                 print("[!] Exception raised \n", e)
             time_ela = int(time.time() - start_time)
             ###
         s = f.getvalue()
         # checks
-        checks = ["bruce 172.16.231.130",
-                  "nigel 172.16.231.131"]
+        checks = ["t1 172.16.231.130",
+                  "t2 172.16.231.131"]
         for check in checks:
             if check not in s:
                 print("[!] Test failed on check: ", check)
@@ -128,17 +128,17 @@ class Tests(object):
             start_time = time.time()
             try:
                 config.CONSOLE.do_setup('')
-                config.CONSOLE.do_target('bruce 172.16.231.130')
-                config.CONSOLE.do_target('nigel 172.16.231.131')
-                config.CONSOLE.do_scan('ports bruce')
+                config.CONSOLE.do_target('t1 172.16.231.130')
+                config.CONSOLE.do_target('t2 172.16.231.131')
+                config.CONSOLE.do_scan('ports t1')
             except Exception as e:
                 print("[!] Exception raised \n", e)
             time_ela = int(time.time() - start_time)
             ###
         s = f.getvalue()
         # checks
-        if len(config.TARGETS['bruce'].tcp_ports) != 9 or \
-            len(config.TARGETS['bruce'].udp_ports) != 4:
+        if len(config.TARGETS['t1'].tcp_ports) != 9 or \
+            len(config.TARGETS['t1'].udp_ports) != 4:
                 print("[!] Test failed to find all ports")
                 return
         print("[*] Test passed in", time_ela, "seconds")
@@ -154,24 +154,24 @@ class Tests(object):
             start_time = time.time()
             try:
                 config.CONSOLE.do_setup('')
-                config.CONSOLE.do_target('bruce 172.16.231.130')
-                config.CONSOLE.do_target('nigel 172.16.231.131')
-                config.CONSOLE.do_import('port bruce')
-                config.CONSOLE.do_import('full bruce')
-                config.CONSOLE.do_import('port nigel')
-                config.CONSOLE.do_import('full nigel')
+                config.CONSOLE.do_target('t1 172.16.231.130')
+                config.CONSOLE.do_target('t2 172.16.231.131')
+                config.CONSOLE.do_import('port t1')
+                config.CONSOLE.do_import('full t1')
+                config.CONSOLE.do_import('port t2')
+                config.CONSOLE.do_import('full t2')
             except Exception as e:
                 print("[!] Exception raised \n", e)
             time_ela = int(time.time() - start_time)
             ###
         s = f.getvalue()
         # checks
-        if len(config.TARGETS['bruce'].tcp_ports) != 10 or \
-            len(config.TARGETS['bruce'].udp_ports) != 4 or \
-            len(config.TARGETS['nigel'].tcp_ports) != 10 or \
-            len(config.TARGETS['nigel'].udp_ports) != 4 or \
-            len(config.TARGETS['bruce'].vulns.keys()) != 16 or \
-            len(config.TARGETS['nigel'].vulns.keys()) != 16:
+        if len(config.TARGETS['t1'].tcp_ports) != 10 or \
+            len(config.TARGETS['t1'].udp_ports) != 4 or \
+            len(config.TARGETS['t2'].tcp_ports) != 10 or \
+            len(config.TARGETS['t2'].udp_ports) != 4 or \
+            len(config.TARGETS['t1'].vulns.keys()) != 16 or \
+            len(config.TARGETS['t2'].vulns.keys()) != 16:
                 print("[!] Test failed to import all scan data")
                 return
         print("[*] Test passed in", time_ela, "seconds")
@@ -187,42 +187,42 @@ class Tests(object):
             start_time = time.time()
             try:
                 config.CONSOLE.do_setup('')
-                config.CONSOLE.do_target('bruce 172.16.231.130')
-                config.CONSOLE.do_target('nigel 172.16.231.131')
-                config.CONSOLE.do_import('port bruce')
-                config.CONSOLE.do_import('full bruce')
-                config.CONSOLE.do_import('port nigel')
-                config.CONSOLE.do_import('full nigel')
-                # limit initial access options (bruce msql only)
-                config.TARGETS['bruce'].action_history = \
+                config.CONSOLE.do_target('t1 172.16.231.130')
+                config.CONSOLE.do_target('t2 172.16.231.131')
+                config.CONSOLE.do_import('port t1')
+                config.CONSOLE.do_import('full t1')
+                config.CONSOLE.do_import('port t2')
+                config.CONSOLE.do_import('full t2')
+                # limit initial access options (t1 msql only)
+                config.TARGETS['t1'].action_history = \
                                                     ["exploit_cve_2008_4250"]
-                config.TARGETS['nigel'].action_history = \
+                config.TARGETS['t2'].action_history = \
                                                     ["exploit_cve_2008_4250"]
-                config.TARGETS['nigel'].action_history.append(\
+                config.TARGETS['t2'].action_history.append(\
                                                     "exploit_msql_brute_force")
                 config.CONSOLE.do_plan('')
-                # limit initial access options (nigel msql only)
-                config.TARGETS['bruce'].action_history = \
+                # limit initial access options (t2 msql only)
+                config.TARGETS['t1'].action_history = \
                                                     ["exploit_cve_2008_4250"]
-                config.TARGETS['nigel'].action_history = \
+                config.TARGETS['t2'].action_history = \
                                                     ["exploit_cve_2008_4250"]
-                config.TARGETS['bruce'].action_history.append(\
+                config.TARGETS['t1'].action_history.append(\
                                                     "exploit_msql_brute_force")
                 config.CONSOLE.do_plan('')
-                # limit initial access options (bruce 4250 only)
-                config.TARGETS['bruce'].action_history = \
+                # limit initial access options (t1 4250 only)
+                config.TARGETS['t1'].action_history = \
                                                     ["exploit_msql_brute_force"]
-                config.TARGETS['nigel'].action_history = \
+                config.TARGETS['t2'].action_history = \
                                                     ["exploit_msql_brute_force"]
-                config.TARGETS['nigel'].action_history.append(\
+                config.TARGETS['t2'].action_history.append(\
                                                     "exploit_cve_2008_4250")
                 config.CONSOLE.do_plan('')
-                # limit initial access options (bruce msql only)
-                config.TARGETS['bruce'].action_history = \
+                # limit initial access options (t1 msql only)
+                config.TARGETS['t1'].action_history = \
                                                     ["exploit_msql_brute_force"]
-                config.TARGETS['nigel'].action_history = \
+                config.TARGETS['t2'].action_history = \
                                                     ["exploit_msql_brute_force"]
-                config.TARGETS['bruce'].action_history.append(\
+                config.TARGETS['t1'].action_history.append(\
                                                     "exploit_cve_2008_4250")
                 config.CONSOLE.do_plan('')
             except Exception as e:
@@ -234,10 +234,10 @@ class Tests(object):
         print(s)
         print("*******************")
         # checks
-        if "EXPLOIT_MSQL_BRUTE_FORCE BRUCE" not in s \
-            or "EXPLOIT_CVE_2008_4250 BRUCE" not in s \
-            or "EXPLOIT_MSQL_BRUTE_FORCE NIGEL" not in s\
-            or "EXPLOIT_CVE_2008_4250 NIGEL" not in s:
+        if "EXPLOIT_MSQL_BRUTE_FORCE t1" not in s \
+            or "EXPLOIT_CVE_2008_4250 t1" not in s \
+            or "EXPLOIT_MSQL_BRUTE_FORCE t2" not in s\
+            or "EXPLOIT_CVE_2008_4250 t2" not in s:
                 print("[!] Test failed: no initial access attack planned")
                 return
         print("[*] Test passed in", time_ela, "seconds")
@@ -254,14 +254,14 @@ class Tests(object):
             start_time = time.time()
             try:
                 config.CONSOLE.do_setup('')
-                config.CONSOLE.do_target('bruce 172.16.231.130')
-                config.CONSOLE.do_target('bruce1 172.16.231.130')
-                config.CONSOLE.do_target('bruce2 172.16.231.130')
-                config.CONSOLE.do_target('bruce3 172.16.231.130')
-                config.CONSOLE.do_target('bruce4 172.16.231.130')
-                config.CONSOLE.do_target('nigel5 172.16.231.131')
-                # config.CONSOLE.do_import('port bruce')
-                # config.CONSOLE.do_import('full bruce')
+                config.CONSOLE.do_target('t1 172.16.231.130')
+                config.CONSOLE.do_target('t2 172.16.231.130')
+                config.CONSOLE.do_target('t3 172.16.231.130')
+                config.CONSOLE.do_target('t4 172.16.231.130')
+                config.CONSOLE.do_target('t5 172.16.231.130')
+                config.CONSOLE.do_target('t25 172.16.231.131')
+                # config.CONSOLE.do_import('port t1')
+                # config.CONSOLE.do_import('full t1')
                 config.CONSOLE.do_plan('')
             except Exception as e:
                 print("[!] Exception raised \n", e)
@@ -272,12 +272,6 @@ class Tests(object):
         print(s)
         print("*******************")
         # checks
-        # if "EXPLOIT_MSQL_BRUTE_FORCE BRUCE" not in s \
-        #     or "EXPLOIT_CVE_2008_4250 BRUCE" not in s \
-        #     or "EXPLOIT_MSQL_BRUTE_FORCE NIGEL" not in s\
-        #     or "EXPLOIT_CVE_2008_4250 NIGEL" not in s:
-        #         print("[!] Test failed: no initial access attack planned")
-        #         return
         print("[*] Test completed in", time_ela, "seconds")
 
     def test8(self):
@@ -298,6 +292,7 @@ class Tests(object):
                 config.CONSOLE.do_import('port t2')
                 config.CONSOLE.do_import('full t2')
                 config.CONSOLE.do_exploit('cve-2008-4250 t1')
+                original_session = config.TARGETS['t1'].session_id
                 config.CONSOLE.do_exploit('persistance t1')
             except Exception as e:
                 print("[!] Exception raised \n", e)
@@ -305,7 +300,10 @@ class Tests(object):
             ###
         s = f.getvalue()
         print("*******************")
-        print(s)
+        # print(s)
         print("*******************")
         # checks
-        print("[*] Test passed in", time_ela, "seconds")
+        if original_session != config.TARGETS['t1'].session_id:
+            print("[*] Test passed in", time_ela, "seconds")
+        else:
+            print("[*] Test failed")

