@@ -3,7 +3,6 @@
 # Author: Daniel Crouch
 # Date created: March 2020
 
-
 import os
 from pathlib import Path
 from setuptools import setup

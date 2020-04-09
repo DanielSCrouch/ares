@@ -108,6 +108,7 @@
  	:parameters   		(?x - host)
  	:precondition 		(and (initial_access ?x)
  									  		 (user_access ?x)
+												 (hist_exploit_tokens ?x)
 												 (not (hist_exploit_cve_2011_2005 ?x)))
  	:effect      		  (and (admin_access ?x)
 												 (hist_exploit_cve_2011_2005 ?x))
@@ -133,6 +134,13 @@
 												 (admin_access ?y)
 												 (traversed ?y)
 												 (hist_exploit_psexec ?y))
+)
+
+(:action exploit_persistence
+ 	:parameters   		(?x - host)
+ 	:precondition 		(and (initial_access ?x)
+												 (admin_access ?x))
+ 	:effect      		  (and (controlled ?x))
 )
 
 )

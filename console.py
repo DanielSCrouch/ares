@@ -259,7 +259,7 @@ class Console(Cmd):
                 config.PRIVILEDGEESC.exploit_hashdump(target_name)
             if exploit == 'psexec':
                 config.TRAVERSAL.exploit_psexec(target_name, target_name2)
-            if exploit == 'persistance':
+            if exploit == 'persistence':
                 config.CONTROL.persistant_reverse_tcp(target_name)
             if exploit == 'snap':
                 config.RECON.snap(target_name)
@@ -296,7 +296,7 @@ class Console(Cmd):
         # print("*** Unknown Command, see 'help'")
 
     def postcmd(self, stop, line):
-        print('\n')
+        # print('\n')
         if stop:
             return True
 

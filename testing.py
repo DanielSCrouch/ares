@@ -288,12 +288,12 @@ class Tests(object):
                 config.CONSOLE.do_target('t1 172.16.231.130')
                 config.CONSOLE.do_target('t2 172.16.231.131')
                 config.CONSOLE.do_import('port t1')
-                config.CONSOLE.do_import('full t1')
+                # config.CONSOLE.do_import('full t1')
                 config.CONSOLE.do_import('port t2')
-                config.CONSOLE.do_import('full t2')
-                config.CONSOLE.do_exploit('cve-2008-4250 t1')
-                original_session = config.TARGETS['t1'].session_id
-                config.CONSOLE.do_exploit('persistance t1')
+                # config.CONSOLE.do_import('full t2')
+                # config.CONSOLE.do_exploit('cve-2008-4250 t1')
+                # original_session = config.TARGETS['t1'].session_id
+                # config.CONSOLE.do_exploit('persistance t1')
             except Exception as e:
                 print("[!] Exception raised \n", e)
             time_ela = int(time.time() - start_time)
@@ -303,7 +303,7 @@ class Tests(object):
         # print(s)
         print("*******************")
         # checks
-        if original_session != config.TARGETS['t1'].session_id:
-            print("[*] Test passed in", time_ela, "seconds")
-        else:
-            print("[*] Test failed")
+        # if original_session != config.TARGETS['t1'].session_id:
+            # print("[*] Test passed in", time_ela, "seconds")
+        # else:
+            # print("[*] Test failed")

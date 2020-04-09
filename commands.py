@@ -57,6 +57,7 @@ class Commands(object):
             config.MSFCOMMANDS.set_workspace()
             print("\r[*] setup complete")
             self.setup_complete = True
+            print()
 
     def plan(self, depth=5, verbose=False):
         """
@@ -70,7 +71,7 @@ class Commands(object):
             return
         # recall planner to find maximum depth
         for d in range(1, depth+1):
-            print("\r[*] running planner at depth", d)
+            # print("\r[*] running planner at depth", d)
             steps = []
             config.PDDLTRANSLATE.generate_problem(depth=d)
             config.PLANNER.run()
@@ -92,13 +93,13 @@ class Commands(object):
                         steps.append(line)
         if verbose:
             print("\r[*] planner resolved")
-            print('\n    ' + 'plan' + '\n    ' + '=' * 60)
+            print('\n    ' + 'Attack Vector' + '\n    ' + '=' * 60)
             if len(steps) == 0:
                 print('\r[!] planning error, see plan.txt')
             else:
                 for step in steps:
                     print('   ', step)
-
+                print()
 
     def target(self, name, ip, verbose=False):
         """
@@ -110,6 +111,7 @@ class Commands(object):
             print('\n    ' + 'targets' + '\n    ' + '=' * 60)
             for target in config.TARGETS.values():
                 print('   ', target.name, target.ip)
+            print()
 
     def show_targets(self):
         """
@@ -118,6 +120,7 @@ class Commands(object):
         print('\n    ' + 'targets' + '\n    ' + '=' * 60)
         for target in config.TARGETS.values():
             print('   ', target.name, target.ip)
+        print()
 
     def show_target(self, target_name):
         """
@@ -188,7 +191,7 @@ class Commands(object):
         if scan_type == 'full':
             config.SCANIMPORT.import_full_scan(target_name, file_path)
         # self.update_vulns(target_name)
-        print("\r[+]", target_name, "updated with", scan_type, "scan")
+        print("\r[+]", target_name, "updated with", scan_type, "scan \n")
 
     def update_vulns(self, target_name):
         """

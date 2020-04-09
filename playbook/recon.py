@@ -56,6 +56,7 @@ class Recon(object):
             print('\n    ' + 'hosts' + '\n    ' + '=' * 60)
             for host in live_hosts:
                 print('    ' + host + " - live")
+            print()
         return live_hosts
 
     def port_scan(self, scan_type, target_name, verbose=False):

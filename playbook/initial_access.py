@@ -116,9 +116,10 @@ class InitialAccess(object):
                     words = line.split()
                     target.session_id = words[3]
                     config.MSFCONSOLE.background_session(target_name)
-                    print("[*] exploit successful, session id:", words[3])
+                    print("[*] exploit successful, session id:", words[3], '\n')
                     break
             # update user priviledges
             config.PRIVILEDGEESC.update_priviledes(target_name)
         else:
             print("[!] exploit failed, password not found")
+            print()

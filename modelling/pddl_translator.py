@@ -1,5 +1,5 @@
 # PDDL Translator, used to format target models into an problem/domain file
-# compatible with the AI Planner 
+# compatible with the AI Planner
 #
 # Author: Daniel Crouch
 # Date created: March 2020
@@ -127,7 +127,7 @@ class PDDLTranslate(object):
             goal = 'command'
         if depth == 7:
             goal = 'objective'
-        print('goal is: ', goal)
+        # print('goal is: ', goal)
         # format goal
         p = "\n\n(:goal"
         if len(config.TARGETS) > 1:
