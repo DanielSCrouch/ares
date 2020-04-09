@@ -20,6 +20,13 @@ Install depdendancies:
 python3 setup.py install
 ```
 
-```something here```
+## Configuration
+
+```MSF_LHOST```: static ip 
+```NESSUS_USERNAME```: nessus account username 
+```NESSUS_PASSWORD```: nessus account password
+```POSTGRES_USER```: postgress username
+```POSTGRES_PASSWORD```: postgess password
+```POSTGRES_DB_NAME```: postgress database name 
 
 ## Usage
