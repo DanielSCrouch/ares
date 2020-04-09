@@ -24,7 +24,7 @@ class PDDLTranslate(object):
     Defines a collection of methods for translating models to PDDL problems.
     """
 
-    def generate_problem(self, depth=2):
+    def generate_problem(self, target_name, depth=2):
         """
         Generates a PDDL problem file for use with planner.
         - optional arguments:
@@ -36,7 +36,7 @@ class PDDLTranslate(object):
         problem = self.get_header()
         problem += self.get_objects()
         problem += self.get_init(depth)
-        problem += self.get_goals(depth)
+        problem += self.get_goals(target_name, depth)
         problem += '\n\n)'
         problem_file.write_text(problem)
         return True
@@ -110,7 +110,7 @@ class PDDLTranslate(object):
         p += "\n       )"
         return p
 
-    def get_goals(self, depth):
+    def get_goals(self, target_name, depth):
         # parse goal
         goal = ''
         if depth == 1:
@@ -124,22 +124,21 @@ class PDDLTranslate(object):
         if depth == 5:
             goal = 'traversed'
         if depth == 6:
-            goal = 'command'
-        if depth == 7:
-            goal = 'objective'
+            goal = 'controlled'
         # print('goal is: ', goal)
         # format goal
         p = "\n\n(:goal"
-        if len(config.TARGETS) > 1:
-            p += " (or"
-            for target in config.TARGETS.values():
-                name = self.get_legal(target.name)
-                p += "\n    (" + goal + " " + name + ")"
-            p += "\n    )"
-        else:
-            for target in config.TARGETS.values():
-                name = self.get_legal(target.name)
-                p += "\n    (" + goal + " " + name + ")"
+        # if len(config.TARGETS) > 1:
+        #     p += " (or"
+        #     for target in config.TARGETS.values():
+        #         name = self.get_legal(target.name)
+        #         p += "\n    (" + goal + " " + name + ")"
+        #     p += "\n    )"
+        # else:
+        #     for target in config.TARGETS.values():
+        #         name = self.get_legal(target.name)
+        #         p += "\n    (" + goal + " " + name + ")"
+        p += "\n    (" + goal + " " + target_name + ")"
         p += "\n    )"
         return p
 

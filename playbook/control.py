@@ -46,6 +46,7 @@ class Control(object):
                 words = line.split()
                 target.session_id = words[3]
                 print("[*] exploit successful, new session id:", words[3])
+                print()
 
 
 #

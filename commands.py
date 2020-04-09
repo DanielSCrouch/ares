@@ -59,7 +59,7 @@ class Commands(object):
             self.setup_complete = True
             print()
 
-    def plan(self, depth=5, verbose=False):
+    def plan(self, target_name, depth=6, verbose=False):
         """
         Generate problem file and run planner.
         """
@@ -73,7 +73,7 @@ class Commands(object):
         for d in range(1, depth+1):
             # print("\r[*] running planner at depth", d)
             steps = []
-            config.PDDLTRANSLATE.generate_problem(depth=d)
+            config.PDDLTRANSLATE.generate_problem(target_name, depth=d)
             config.PLANNER.run()
             plan = outpath.read_text()
             if 'plan' not in plan:

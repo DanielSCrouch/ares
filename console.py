@@ -216,8 +216,15 @@ class Console(Cmd):
         """
         Run AI Planner
         """
+        # command validation
+        cmds = cmd.split()
+        if len(cmds) != 1:
+            print("*** invalid number of arguments")
+            return
+        # command execution
+        target_name = cmds[0]
         try:
-            config.COMMANDS.plan(verbose=True)
+            config.COMMANDS.plan(target_name, verbose=True)
         except Exception as e:
             handle(e)
 

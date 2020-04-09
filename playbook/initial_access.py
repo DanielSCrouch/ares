@@ -109,7 +109,7 @@ class InitialAccess(object):
             # run exploit (part 2)
             config.MSFCONSOLE.set_active_session()
             cmd = "exploit"
-            msf_reply = config.MSFCONSOLE.callback(cmd, verbose=False, wait=22)
+            msf_reply = config.MSFCONSOLE.callback(cmd, verbose=False, wait=26)
             # handle result
             for line in msf_reply.splitlines():
                 if 'Meterpreter session' in line:

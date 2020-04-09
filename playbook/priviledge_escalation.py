@@ -64,9 +64,11 @@ class PriviledgeEsc(object):
             current_access = target.access
             if current_access != original_access:
                 print("[+] priviledge escalation:", original_access, "=>", current_access)
+                print()
                 return
             else:
                 print("[-] escalation via tokens failed ")
+                print()
         # background session
 
     def exploit_cve_2011_2005(self, target_name, verbose=True):
