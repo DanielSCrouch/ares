@@ -35,3 +35,12 @@ python3 setup.py install
 ```POSTGRES_DB_NAME```: postgress database name 
 
 ## Usage
+
+### Starting ARES software
+
+You can start the application with ```./ares.py``` from the project directory. 
+
+Type ```help``` to return instructions, or ```help method_name``` for usage and options.
+
+### Starting ARES software
+
