@@ -81,12 +81,12 @@ Import: Allows the user to skip the scanning stage and import a scan report dire
 >>> import full "target name"
 ```
 
-Metasploit: Opens an embedded Metasploit console beginning at the top directory. When active the user prompt will change to msf >>>. To exit back to the Ares console type cexit:
+Metasploit: Opens an embedded Metasploit console beginning at the top directory. When active the user prompt will change to ```msf >>>```. To exit back to the Ares console type ```cexit```:
 ```python
->>> msfmsf 
+>>> msf
 ```
 ```python
->>> cexit
+msf>>> cexit
 ```
 
 Plan: Call the AI planner to generate a new attack vector:
