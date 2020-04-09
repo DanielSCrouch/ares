@@ -2,6 +2,8 @@
 Automated penetration testing tool for Ubuntu Linux, designed as an extension to the Metasploit Framework. Applies a Metric-FF AI Planner to generate potential attack vectors automatically for the user. 
 
 ## Prerequisites
+[Python 3.X](https://www.python.org/downloads/)
+
 [Metasploit Framework](https://metasploit.help.rapid7.com/docs/installing-the-metasploit-framework)
 
 [Nessus Essentials Vulnerability Scanner](https://www.tenable.com/products/nessus/nessus-essentials)
