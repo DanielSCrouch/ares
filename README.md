@@ -14,7 +14,7 @@ Optional:
 
 [PgAmin4](https://www.pgadmin.org/download/)
 
-Setup:
+Install depdendancies:
 
 ```
 python3 setup.py install
