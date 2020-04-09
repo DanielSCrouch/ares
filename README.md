@@ -57,36 +57,59 @@ Scan: Runs a selection of scans against an IP range of specific target:
 >>> scan port "target name"
 ```
 ```python
->>> scan full "target name"3
+>>> scan full "target name"
 ```
 
 Target: Creates a Target object model of a host at a given IP address and appends it to config.TARGETS. Target names must be unique:
+```python
 >>> target "target name" "ip range"
+```
 
 Show: Displays target attributes to the console including IP addresses, accesses levels and detected vulnerabilities:
+```python
 >>> show targets
+```
+```python
 >>> show target "target name"
+```
 
 Import: Allows the user to skip the scanning stage and import a scan report directlyfrom a CSV file into a target modal:
+```python
 >>> import port "target name"
+```
+```python
 >>> import full "target name"
+```
 
 Metasploit: Opens an embedded Metasploit console beginning at the top directory. When active the user prompt will change to msf >>>. To exit back to the Ares console type cexit:
+```python
 >>> msfmsf 
+```
+```python
 >>> cexit
+```
 
 Plan: Call the AI planner to generate a new attack vector:
+```python
 >>> plan 
+```
 
 Exploit: Execute an exploit against a specified target, for example:
+```python
 >>> exploit cve-2008-4250 "target name"
+```
 
 Shell: Execute a single-line shell command directly from the console command-line, for example:
+```python
 >>> shell ls -la
+```
 
 Exit: Safely shut down the application
+```python
 >>> exit (or>>> q)
+```
 
 Test: Run a number of pre-scripted unit tests directly, returns the time elapsed, errortracebacks and success status:
+```python
 >>> test [1-7]
-
+```
