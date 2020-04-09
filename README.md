@@ -22,7 +22,7 @@ python3 setup.py install
 
 ## Configuration
 
-```MSF_LHOST```: static ip 
+```MSF_LHOST```: static ip of host machine 
 
 ```NESSUS_USERNAME```: nessus account username 
 
