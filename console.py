@@ -277,7 +277,7 @@ class Console(Cmd):
 
     def complete_exploit(self, text, line, begidx, endidx):
         options = ['cve-2008-4250', 'msql-brute-force', 'tokens', \
-                        'cve-2011-2005', 'hashdump', 'psexec', 'persistance', \
+                        'cve-2011-2005', 'hashdump', 'psexec', 'persistence', \
                         'snap']
         if text:
             scan_opts = ([o for o in options if o.startswith(text)])
