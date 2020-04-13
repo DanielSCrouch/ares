@@ -49,7 +49,7 @@ class Metasploit(object):
                                    shell=True,                \
                                    bufsize=0)
         config.LOADING = True
-        time.sleep(10)
+        time.sleep(12)
         config.LOADING = False
 
         cmd = "load msgrpc"
@@ -61,7 +61,7 @@ class Metasploit(object):
         self.process.stdin.write(cmd)
         self.process.stdin.flush()
 
-        time.sleep(3)
+        time.sleep(4)
 
         Thread(target=self.poll_server).start()
         return True
